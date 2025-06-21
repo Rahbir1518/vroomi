@@ -10,7 +10,7 @@ export default function Choose() {
       <header className="bg-white/80 backdrop-blur-sm shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <Link to="/" className="text-2xl font-bold text-blue-600">
+            <Link to="/" className="text-2xl font-bold text-tertiary">
               VROOMI
             </Link>
             <div className="flex items-center space-x-4">
