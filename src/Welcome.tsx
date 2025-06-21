@@ -30,7 +30,7 @@ export default function Welcome() {
       </div>
 
       {/* Main Content */}
-      <div className="z-20 text-center animate-fade-in">
+      <div className="mt-22 z-20 text-center animate-fade-in">
         <h1 className="text-6xl md:text-8xl font-extrabold text-white drop-shadow-2xl mb-4 animate-slide-up">
           Welcome to York
         </h1>
@@ -136,12 +136,14 @@ export default function Welcome() {
       </div>
 
       {/* Footer */}
-      <footer className="absolute bottom-4 text-white/80 text-xs z-20 flex items-center animate-fade-in animation-delay-1000">
+      {/* Footer */}
+      <footer className="m-12 text-white/80 text-xs z-20 flex items-center justify-center animate-fade-in animation-delay-1000">
         <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
         </svg>
         &copy; {new Date().getFullYear()} York University Hackathon Team
       </footer>
+
 
       {/* Enhanced Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-black/60 z-0" />
