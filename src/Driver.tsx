@@ -1,4 +1,4 @@
-import { useUser, UserButton } from "@clerk/clerk-react";
+  import { useUser, UserButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import logo from "../image/logo1.png"
@@ -118,7 +118,7 @@ export default function Driver() {
             <ul className="flex space-x-6">
               <li>
                 <button
-                  className={`pb-2 ${activeTab === 'dashboard' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+                  className={`pb-2 cursor-pointer ${activeTab === 'dashboard' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
                   onClick={() => setActiveTab('dashboard')}
                 >
                   Dashboard
@@ -126,7 +126,7 @@ export default function Driver() {
               </li>
               <li>
                 <button
-                  className={`pb-2 ${activeTab === 'rides' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+                  className={`pb-2 cursor-pointer ${activeTab === 'rides' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
                   onClick={() => setActiveTab('rides')}
                 >
                   My Rides
