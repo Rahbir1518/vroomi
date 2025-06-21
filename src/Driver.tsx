@@ -1,25 +1,121 @@
-  import { useUser, UserButton } from "@clerk/clerk-react";
+import { useUser, UserButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import logo from "../image/logo1.png"
+import { useEffect, useState } from "react";
+import logo from "../image/logo1.png";
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl     = import.meta.env.VITE_SUPABASE_URL!;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+interface Car {
+  id: string;
+  user_id: string;
+  username?: string;   // ← new
+  make: string;
+  model: string;
+  year: number;
+  license: string;
+  seats: number;
+}
 
 export default function Driver() {
   const { user } = useUser();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'rides' | 'edit'>('dashboard');
+  const [cars, setCars] = useState<Car[]>([]);
+
+  useEffect(() => {
+    const syncUsernames = async () => {
+      if (!user?.id) return;
+
+      const usernameToWrite =
+        user.username
+        || user.fullName
+        || user.primaryEmailAddress?.emailAddress
+        || 'Unknown';
+
+      const { error } = await supabase
+        .from("cars")
+        .update({ username: usernameToWrite })
+        .eq("user_id", user.id);
+
+      if (error) console.error("🔴 Failed to sync cars.username:", error);
+      else        console.log("✅ Synced cars.username for user", user.id);
+    };
+
+    syncUsernames();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchCars = async () => {
+      if (!user?.id) return;
+      const { data, error } = await supabase
+        .from("cars")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error fetching cars:", error);
+      } else {
+        setCars(data as Car[]);
+      }
+    };
+
+    fetchCars();
+  }, [user]);
+
+  const handleInputChange = (
+    index: number,
+    field: keyof Car,
+    value: string | number
+  ) => {
+    const updatedCars = [...cars];
+    updatedCars[index][field] = value as never;
+    setCars(updatedCars);
+  };
+
+  const handleUpdate = async (index: number) => {
+    const car = cars[index];
+
+    const usernameToWrite =
+      user?.username
+      || user?.fullName
+      || user?.primaryEmailAddress?.emailAddress
+      || 'Unknown';
+
+    const { error } = await supabase
+      .from("cars")
+      .update({
+        make:     car.make,
+        model:    car.model,
+        year:     car.year,
+        license:  car.license,
+        seats:    car.seats,
+        username: usernameToWrite,  
+      })
+      .eq("id", car.id);
+
+    if (error) {
+      alert("Failed to update car.");
+      console.error(error);
+    } else {
+      alert("Car updated successfully.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="">
-              <img
-                src={logo} alt="Vroomi" 
-                className="w-35 md:w-37 h-15 object-cover"
+              <Link to="/">
+                <img
+                  src={logo}
+                  alt="Vroomi"
+                  className="w-35 md:w-37 h-15 object-cover"
                 />
-            </Link>
+              </Link>
               <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
                 Driver Dashboard
               </span>
@@ -35,7 +131,6 @@ export default function Driver() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back, {user?.firstName}! 🚗
@@ -89,7 +184,7 @@ export default function Driver() {
               </div>
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674�" />
                 </svg>
               </div>
             </div>
@@ -105,14 +200,14 @@ export default function Driver() {
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l-2 2m0 0l2 2m-2-2h13M13 5h6M13 5v4m0-4l2 2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l-2 2m0 0l2 2m-2-2h13M13 5h6M13 5v4m0-4�" />
                 </svg>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tab Section Placeholder */}
+        {/* Tab Section */}
         <div>
           <nav className="mb-4 border-b">
             <ul className="flex space-x-6">
@@ -132,16 +227,75 @@ export default function Driver() {
                   My Rides
                 </button>
               </li>
+              <li>
+                <button
+                  className={`pb-2 cursor-pointer ${activeTab === 'edit' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+                  onClick={() => setActiveTab('edit')}
+                >
+                  Edit
+                </button>
+              </li>
             </ul>
           </nav>
+
           {activeTab === 'dashboard' && (
             <div>
               <p className="text-gray-700">This is the main dashboard view. Add charts or recent activity here.</p>
             </div>
           )}
+
           {activeTab === 'rides' && (
             <div>
               <p className="text-gray-700">Here you can list your past rides or upcoming ride schedules.</p>
+            </div>
+          )}
+
+          {activeTab === 'edit' && (
+            <div className="space-y-6">
+              {cars.map((car, index) => (
+                <div key={car.id} className="bg-white p-4 shadow-sm rounded-lg border space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      className="border p-2 rounded"
+                      placeholder="Make"
+                      value={car.make || ''}
+                      onChange={(e) => handleInputChange(index, 'make', e.target.value)}
+                    />
+                    <input
+                      className="border p-2 rounded"
+                      placeholder="Model"
+                      value={car.model || ''}
+                      onChange={(e) => handleInputChange(index, 'model', e.target.value)}
+                    />
+                    <input
+                      className="border p-2 rounded"
+                      placeholder="Year"
+                      type="number"
+                      value={car.year || ''}
+                      onChange={(e) => handleInputChange(index, 'year', parseInt(e.target.value) || 0)}
+                    />
+                    <input
+                      className="border p-2 rounded"
+                      placeholder="License"
+                      value={car.license || ''}
+                      onChange={(e) => handleInputChange(index, 'license', e.target.value)}
+                    />
+                    <input
+                      className="border p-2 rounded"
+                      placeholder="Seats"
+                      type="number"
+                      value={car.seats || ''}
+                      onChange={(e) => handleInputChange(index, 'seats', parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                  <button
+                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    onClick={() => handleUpdate(index)}
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
