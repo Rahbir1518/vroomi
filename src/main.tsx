@@ -12,6 +12,7 @@ import Choose from './Choose.tsx'
 import Driver from './Driver.tsx'
 import Rider from './Rider.tsx'
 import ProtectedRoute from './ProtectedRoute.tsx'
+import CarDetails from './carDetails.tsx'
 
 // Import your publishable key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -77,7 +78,15 @@ function AppRouter() {
           </ProtectedRoute>
         } 
       />
-      
+      <Route 
+        path="/carDetail" 
+        element={
+          <ProtectedRoute>
+            <CarDetails />
+          </ProtectedRoute>
+        } 
+      />
+
       <Route 
         path="/driver" 
         element={
