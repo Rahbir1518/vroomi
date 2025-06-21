@@ -22,7 +22,7 @@ export default function Register() {
             routing="path" 
             path="/register"
             signInUrl="/login"
-            afterSignUpUrl="/"
+            afterSignUpUrl="/welcome"
             appearance={{
               elements: {
                 rootBox: "mx-auto",

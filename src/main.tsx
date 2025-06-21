@@ -15,7 +15,6 @@ import ProtectedRoute from './ProtectedRoute.tsx'
 
 // Import your publishable key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
-
 if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key - Add VITE_CLERK_PUBLISHABLE_KEY to your .env.local file")
 }
@@ -38,22 +37,25 @@ function AppRouter() {
 
   return (
     <Routes>
-      {/* Public routes - redirect to home if already signed in */}
+      {/* Public home route - accessible to everyone */}
+      <Route path="/" element={<Home />} />
+      
+      {/* Auth routes - redirect to dashboard if already signed in */}
       <Route 
         path="/login" 
-        element={isSignedIn ? <Navigate to="/" replace /> : <Login />} 
+        element={isSignedIn ? <Navigate to="/dashboard" replace /> : <Login />} 
       />
       <Route 
         path="/register" 
-        element={isSignedIn ? <Navigate to="/" replace /> : <Register />} 
+        element={isSignedIn ? <Navigate to="/dashboard" replace /> : <Register />} 
       />
 
-      {/* Protected routes - Home is now the main landing page */}
+      {/* Protected routes - require authentication */}
       <Route 
-        path="/" 
+        path="/dashboard" 
         element={
           <ProtectedRoute>
-            <Home />
+            <Welcome />
           </ProtectedRoute>
         } 
       />
@@ -104,11 +106,8 @@ function AppRouter() {
         } 
       />
 
-      {/* Catch all route - redirect based on auth status */}
-      <Route 
-        path="*" 
-        element={<Navigate to={isSignedIn ? "/" : "/login"} replace />} 
-      />
+      {/* Catch all route - redirect to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

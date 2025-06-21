@@ -1,8 +1,9 @@
 import { useUser, UserButton } from "@clerk/clerk-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Home() {
   const { user, isLoaded } = useUser();
+  const navigate = useNavigate();
 
   if (!isLoaded) {
     return (
@@ -29,10 +30,29 @@ export default function Home() {
             </div>
             
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600 hidden sm:block">
-                {user?.firstName || "Student"}
-              </span>
-              <UserButton afterSignOutUrl="/login" />
+              {user ? (
+                <>
+                  <span className="text-sm text-gray-600 hidden sm:block">
+                    {user.firstName || "Student"}
+                  </span>
+                  <UserButton afterSignOutUrl="/welcome" />
+                </>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="px-4 py-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => navigate('/register')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -141,21 +161,43 @@ export default function Home() {
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Ready to Start Sharing?</h2>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              to="/choose" 
-              className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Get Started Now
-            </Link>
-            <Link 
-              to="/welcome" 
-              className="inline-flex items-center px-8 py-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              View Profile
-            </Link>
+            {user ? (
+              <>
+                <Link 
+                  to="/welcome" 
+                  className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Get Started Now
+                </Link>
+                <Link 
+                  to="/welcome" 
+                  className="inline-flex items-center px-8 py-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  View Profile
+                </Link>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Get Started - Login
+                </button>
+                <button
+                  onClick={() => navigate('/register')}
+                  className="inline-flex items-center px-8 py-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Create Account
+                </button>
+              </>
+            )}
           </div>
         </div>
       </main>
