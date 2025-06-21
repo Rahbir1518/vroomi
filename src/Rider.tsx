@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
-import { Car, MapPin, Clock, DollarSign, Users, Search, CheckCircle, AlertCircle } from "lucide-react";
+import { Car, MapPin, Clock, DollarSign, Users, Search, CheckCircle, AlertCircle, Star, Phone, MessageCircle, Navigation } from "lucide-react";
 import L from "leaflet";
+import { createClient } from '@supabase/supabase-js';
 
-// Fix Leaflet default markers - Modern approach
+// Supabase client setup
+const supabaseUrl = 'https://vgifmkixezmzxjraprjn.supabase.co';
+const supabaseAnonKey = 'pk_test_cGxlYXNpbmctYmVldGxlLTU5LmNsZXJrLmFjY291bnRzLmRldiQ';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Fix Leaflet default markers
 const DefaultIcon = L.icon({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -17,31 +23,94 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Driver {
+  id: string;
   name: string;
-  vehicle: string;
+  email: string;
+  phone: string;
+  home_address: string;
+  car_make: string;
+  car_model: string;
+  car_year: number;
+  license_plate: string;
+  available_seats: number;
+  departure_time: string;
+  price_per_seat: number;
   rating: number;
-  trips: number;
-  departure: string;
+  total_trips: number;
+  latitude: number;
+  longitude: number;
 }
 
-export default function Rider() {
+interface Booking {
+  id?: string;
+  rider_clerk_id: string;
+  rider_home_address: string;
+  rider_latitude: number;
+  rider_longitude: number;
+  driver_id: string;
+  seats_booked: number;
+  total_cost: number;
+  departure_time: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+}
+
+export default function VroomiRider() {
   const [departureTime, setDepartureTime] = useState("");
   const [homeAddress, setHomeAddress] = useState("");
+  const [passengerCount, setPassengerCount] = useState(1);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [matchedDriver, setMatchedDriver] = useState<Driver | null>(null);
   const [estimatedCost, setEstimatedCost] = useState<number | null>(null);
+  const [distance, setDistance] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [step, setStep] = useState<'search' | 'matched' | 'booked'>('search');
+  const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
 
-  const yorkCoords: [number, number] = [43.7735, -79.5019]; // York University
+  // Mock user ID - replace with actual Clerk auth
+  const currentUserId = "user_current_rider";
+  const yorkCoords: [number, number] = [43.7735, -79.5019];
 
   useEffect(() => {
     if (showSuccess) {
-      const timer = setTimeout(() => setShowSuccess(false), 3000);
+      const timer = setTimeout(() => setShowSuccess(false), 4000);
       return () => clearTimeout(timer);
     }
   }, [showSuccess]);
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const findDriverMatch = async (riderLat: number, riderLon: number, departureTime: string) => {
+    try {
+      const { data, error } = await supabase.rpc('find_driver_match', {
+        rider_lat: riderLat,
+        rider_lon: riderLon,
+        departure_time: departureTime
+      });
+
+      if (error) {
+        console.error('Error finding driver match:', error);
+        return null;
+      }
+
+      return data && data.length > 0 ? data[0] : null;
+    } catch (err) {
+      console.error('Error calling find_driver_match:', err);
+      return null;
+    }
+  };
 
   const handleMatch = async () => {
     if (!homeAddress.trim()) {
@@ -58,7 +127,7 @@ export default function Rider() {
     setError("");
 
     try {
-      // Use OpenStreetMap Nominatim API for geocoding
+      // Geocode address
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(homeAddress + ", Toronto, Ontario")}&limit=1`
       );
@@ -69,41 +138,85 @@ export default function Rider() {
         const lon = parseFloat(data[0].lon);
         setCoordinates([lat, lon]);
 
-        // Simulate matching delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Find driver match using Supabase function
+        const driver = await findDriverMatch(lat, lon, departureTime);
 
-        // Mock match with more realistic data
-        const drivers = [
-          { name: "Sarah Chen", vehicle: "Honda Civic 2022", rating: 4.9, trips: 127 },
-          { name: "Michael Rodriguez", vehicle: "Toyota Corolla 2021", rating: 4.8, trips: 89 },
-          { name: "Emily Zhang", vehicle: "Nissan Sentra 2023", rating: 5.0, trips: 64 },
-        ];
-        
-        const randomDriver = drivers[Math.floor(Math.random() * drivers.length)];
-        setMatchedDriver({
-          ...randomDriver,
-          departure: departureTime,
-        } as Driver);
-
-        // Calculate distance and cost
-        const R = 6371; // km
-        const dLat = ((yorkCoords[0] - lat) * Math.PI) / 180;
-        const dLon = ((yorkCoords[1] - lon) * Math.PI) / 180;
-        const a =
-          Math.sin(dLat / 2) ** 2 +
-          Math.cos((lat * Math.PI) / 180) *
-            Math.cos((yorkCoords[0] * Math.PI) / 180) *
-            Math.sin(dLon / 2) ** 2;
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = R * c;
-
-        setEstimatedCost(parseFloat((distance * 0.45 + 2.5).toFixed(2))); // Base fee + per km
-        setShowSuccess(true);
+        if (driver) {
+          setMatchedDriver(driver);
+          
+          const calculatedDistance = calculateDistance(lat, lon, yorkCoords[0], yorkCoords[1]);
+          const totalCost = driver.price_per_seat * passengerCount;
+          
+          setDistance(calculatedDistance);
+          setEstimatedCost(totalCost);
+          setShowSuccess(true);
+          setStep('matched');
+        } else {
+          setError("No drivers found for your departure time and location. Try adjusting your time or check back later.");
+        }
       } else {
-        setError("Could not find your address. Please try a more specific address.");
+        setError("Could not find your address. Please try a more specific address in the Toronto area.");
       }
     } catch (err) {
+      console.error('Error in handleMatch:', err);
       setError("Failed to find location. Please check your internet connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBooking = async () => {
+    if (!matchedDriver || !coordinates || !estimatedCost) {
+      setError("Missing booking information");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const bookingData: Omit<Booking, 'id'> = {
+        rider_clerk_id: currentUserId,
+        rider_home_address: homeAddress,
+        rider_latitude: coordinates[0],
+        rider_longitude: coordinates[1],
+        driver_id: matchedDriver.id,
+        seats_booked: passengerCount,
+        total_cost: estimatedCost,
+        departure_time: departureTime,
+        status: 'pending'
+      };
+
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert([bookingData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Booking error:', error);
+        setError("Failed to create booking. Please try again.");
+        return;
+      }
+
+      // Update driver's available seats
+      const { error: updateError } = await supabase
+        .from('drivers')
+        .update({ 
+          available_seats: matchedDriver.available_seats - passengerCount 
+        })
+        .eq('id', matchedDriver.id);
+
+      if (updateError) {
+        console.error('Error updating driver seats:', updateError);
+      }
+
+      setCurrentBooking(data);
+      setStep('booked');
+      setShowSuccess(true);
+    } catch (err) {
+      console.error('Error creating booking:', err);
+      setError("Failed to create booking. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -113,8 +226,30 @@ export default function Rider() {
     setCoordinates(null);
     setMatchedDriver(null);
     setEstimatedCost(null);
+    setDistance(null);
+    setCurrentBooking(null);
     setError("");
     setShowSuccess(false);
+    setStep('search');
+    setHomeAddress("");
+    setDepartureTime("");
+    setPassengerCount(1);
+  };
+
+  const getCurrentTime = () => {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+    const roundedMinutes = (minutes === 60 ? 0 : minutes).toString().padStart(2, '0');
+    const adjustedHours = minutes === 60 ? (now.getHours() + 1).toString().padStart(2, '0') : hours;
+    return `${adjustedHours}:${roundedMinutes}`;
+  };
+
+  const formatTime = (timeString: string) => {
+    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -125,178 +260,300 @@ export default function Rider() {
         integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
         crossOrigin=""
       />
-      
+
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
-        {/* Success Animation */}
+        {/* Success Notification */}
         {showSuccess && (
-          <div className="fixed top-4 right-4 z-50 transform transition-all duration-500 ease-out animate-pulse">
+          <div className="fixed top-4 right-4 z-50 animate-bounce">
             <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2">
               <CheckCircle className="w-5 h-5" />
-              <span className="font-medium">Match found successfully!</span>
+              <span className="font-medium">
+                {step === 'matched' ? 'Perfect match found!' : 'Booking confirmed!'}
+              </span>
             </div>
           </div>
         )}
 
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-8 transform transition-all duration-700 ease-out">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 transform hover:scale-110 transition-transform duration-300">
-              <Car className="w-8 h-8 text-blue-600" />
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4 shadow-lg">
+              <Car className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
               Vroomi
             </h1>
-            <p className="text-gray-600">Connect peers for affordable rides</p>
+            <p className="text-xl text-gray-600">Connect with peers for affordable rides to York University</p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Form Section */}
-            <div className="bg-white shadow-xl rounded-xl p-8 transform transition-all duration-500 hover:shadow-2xl">
-              <div className="flex items-center space-x-2 mb-6">
-                <Users className="w-6 h-6 text-blue-600" />
-                <h2 className="text-2xl font-semibold text-gray-800">Find Your Ride</h2>
+            <div className="bg-white shadow-2xl rounded-2xl overflow-hidden">
+              <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                <div className="flex items-center space-x-3">
+                  <Search className="w-6 h-6" />
+                  <h3 className="text-2xl font-bold">
+                    {step === 'search' ? 'Find Your Ride' : step === 'matched' ? 'Driver Match' : 'Booking Confirmed'}
+                  </h3>
+                </div>
               </div>
 
-              <div className="space-y-6">
-                <div className="transform transition-all duration-300 hover:scale-105">
-                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                    <Clock className="w-4 h-4 text-blue-500" />
-                    <span>Departure Time</span>
-                  </label>
-                  <input
-                    type="time"
-                    value={departureTime}
-                    onChange={(e) => setDepartureTime(e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300"
-                  />
-                </div>
+              <div className="p-8">
+                {step === 'search' ? (
+                  <div className="space-y-6">
+                    {/* Home Address */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <MapPin className="w-4 h-4 inline mr-2" />
+                        Home Address
+                      </label>
+                      <input
+                        type="text"
+                        value={homeAddress}
+                        onChange={(e) => setHomeAddress(e.target.value)}
+                        placeholder="123 Main St, Toronto, ON"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                      />
+                    </div>
 
-                <div className="transform transition-all duration-300 hover:scale-105">
-                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                    <MapPin className="w-4 h-4 text-red-500" />
-                    <span>Home Address</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={homeAddress}
-                    onChange={(e) => {
-                      setHomeAddress(e.target.value);
-                      setError("");
-                    }}
-                    placeholder="123 Main St, Toronto, ON"
-                    className="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300"
-                  />
-                </div>
+                    {/* Departure Time */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Clock className="w-4 h-4 inline mr-2" />
+                        Departure Time
+                      </label>
+                      <input
+                        type="time"
+                        value={departureTime}
+                        onChange={(e) => setDepartureTime(e.target.value)}
+                        min={getCurrentTime()}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                      />
+                    </div>
 
-                {error && (
-                  <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 animate-pulse">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-sm">{error}</span>
-                  </div>
-                )}
+                    {/* Passenger Count */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Users className="w-4 h-4 inline mr-2" />
+                        Number of Passengers
+                      </label>
+                      <select
+                        value={passengerCount}
+                        onChange={(e) => setPassengerCount(parseInt(e.target.value))}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                      >
+                        <option value={1}>1 passenger</option>
+                        <option value={2}>2 passengers</option>
+                        <option value={3}>3 passengers</option>
+                        <option value={4}>4 passengers</option>
+                      </select>
+                    </div>
 
-                <div className="flex space-x-3">
-                  <button
-                    onClick={handleMatch}
-                    disabled={isLoading}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-semibold transform transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
-                  >
-                    {isLoading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                        <span>Searching...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Search className="w-4 h-4" />
-                        <span>Find Match</span>
-                      </>
+                    {/* Error Message */}
+                    {error && (
+                      <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg">
+                        <div className="flex items-center">
+                          <AlertCircle className="w-5 h-5 mr-2" />
+                          <span>{error}</span>
+                        </div>
+                      </div>
                     )}
-                  </button>
-                  
-                  {matchedDriver && (
+
+                    {/* Search Button */}
+                    <button
+                      onClick={handleMatch}
+                      disabled={isLoading}
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none shadow-lg"
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                          Finding your perfect match...
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <Search className="w-5 h-5 mr-2" />
+                          Find Ride
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                ) : step === 'matched' ? (
+                  /* Driver Match Results */
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                      <h3 className="text-2xl font-bold text-gray-800 mb-2">Match Found!</h3>
+                      <p className="text-gray-600">Here's your driver for today</p>
+                    </div>
+
+                    {matchedDriver && (
+                      <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-xl border-2 border-green-200">
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                            {matchedDriver.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-xl font-bold text-gray-800">{matchedDriver.name}</h4>
+                            <p className="text-gray-600">{matchedDriver.car_make} {matchedDriver.car_model} {matchedDriver.car_year}</p>
+                            <p className="text-sm text-gray-500">{matchedDriver.license_plate}</p>
+                            <div className="flex items-center mt-1">
+                              <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                              <span className="text-sm font-medium">{matchedDriver.rating}</span>
+                              <span className="text-sm text-gray-500 ml-2">({matchedDriver.total_trips} trips)</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="bg-white p-3 rounded-lg">
+                            <Clock className="w-5 h-5 text-gray-500 mb-1" />
+                            <p className="text-sm text-gray-500">Departure</p>
+                            <p className="font-semibold">{formatTime(matchedDriver.departure_time)}</p>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg">
+                            <DollarSign className="w-5 h-5 text-green-500 mb-1" />
+                            <p className="text-sm text-gray-500">Total Cost</p>
+                            <p className="font-semibold text-green-600">${estimatedCost}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="bg-white p-3 rounded-lg">
+                            <Users className="w-5 h-5 text-blue-500 mb-1" />
+                            <p className="text-sm text-gray-500">Available Seats</p>
+                            <p className="font-semibold">{matchedDriver.available_seats}</p>
+                          </div>
+                          {distance && (
+                            <div className="bg-white p-3 rounded-lg">
+                              <Navigation className="w-5 h-5 text-blue-500 mb-1" />
+                              <p className="text-sm text-gray-500">Distance to York</p>
+                              <p className="font-semibold">{distance.toFixed(1)} km</p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <a 
+                            href={`tel:${matchedDriver.phone}`}
+                            className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center"
+                          >
+                            <Phone className="w-4 h-4 mr-2" />
+                            Call
+                          </a>
+                          <a 
+                            href={`sms:${matchedDriver.phone}`}
+                            className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
+                          >
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Text
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {error && (
+                      <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg">
+                        <div className="flex items-center">
+                          <AlertCircle className="w-5 h-5 mr-2" />
+                          <span>{error}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={handleBooking}
+                        disabled={isLoading}
+                        className="bg-green-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Booking...
+                          </div>
+                        ) : (
+                          'Book Ride'
+                        )}
+                      </button>
+                      <button
+                        onClick={resetForm}
+                        className="bg-gray-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                      >
+                        Search Again
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Booking Confirmed */
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                      <h3 className="text-2xl font-bold text-gray-800 mb-2">Booking Confirmed!</h3>
+                      <p className="text-gray-600">Your ride has been booked successfully</p>
+                    </div>
+
+                    {currentBooking && matchedDriver && (
+                      <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-xl border-2 border-green-200">
+                        <div className="text-center mb-4">
+                          <p className="text-sm text-gray-500">Booking ID</p>
+                          <p className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{currentBooking.id}</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-white p-3 rounded-lg text-center">
+                            <Clock className="w-5 h-5 text-gray-500 mx-auto mb-1" />
+                            <p className="text-sm text-gray-500">Departure Time</p>
+                            <p className="font-semibold">{formatTime(departureTime)}</p>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg text-center">
+                            <DollarSign className="w-5 h-5 text-green-500 mx-auto mb-1" />
+                            <p className="text-sm text-gray-500">Total Paid</p>
+                            <p className="font-semibold text-green-600">${currentBooking.total_cost}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                          <p className="text-sm text-blue-800 mb-2">
+                            <strong>Driver:</strong> {matchedDriver.name}
+                          </p>
+                          <p className="text-sm text-blue-800 mb-2">
+                            <strong>Vehicle:</strong> {matchedDriver.car_make} {matchedDriver.car_model} ({matchedDriver.license_plate})
+                          </p>
+                          <p className="text-sm text-blue-800">
+                            <strong>Contact:</strong> {matchedDriver.phone}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     <button
                       onClick={resetForm}
-                      className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all duration-300 hover:scale-105"
+                      className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
                     >
-                      Reset
+                      Book Another Ride
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
-
-              {/* Match Results */}
-              {matchedDriver && coordinates && (
-                <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200 transform transition-all duration-700 ease-out animate-pulse">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
-                    <h3 className="text-xl font-semibold text-gray-800">Perfect Match Found!</h3>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <Users className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm text-gray-600">Driver:</span>
-                        <span className="font-semibold">{matchedDriver.name}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Car className="w-4 h-4 text-purple-500" />
-                        <span className="text-sm text-gray-600">Vehicle:</span>
-                        <span className="font-semibold">{matchedDriver.vehicle}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4 text-orange-500" />
-                        <span className="text-sm text-gray-600">Departure:</span>
-                        <span className="font-semibold">{matchedDriver.departure}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <DollarSign className="w-4 h-4 text-green-500" />
-                        <span className="text-sm text-gray-600">Cost:</span>
-                        <span className="font-semibold text-green-600">${estimatedCost?.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-sm text-gray-600">Rating:</span>
-                      <div className="flex text-yellow-400">
-                        {'★'.repeat(Math.floor(matchedDriver.rating))}
-                      </div>
-                      <span className="text-sm font-semibold">{matchedDriver.rating}</span>
-                      <span className="text-xs text-gray-500">({matchedDriver.trips} trips)</span>
-                    </div>
-                    
-                    <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transform transition-all duration-300 hover:scale-105">
-                      Contact Driver
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Map Section */}
-            <div className="bg-white shadow-xl rounded-xl overflow-hidden transform transition-all duration-500 hover:shadow-2xl">
-              <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <div className="flex items-center space-x-2">
+            <div className="bg-white shadow-2xl rounded-2xl overflow-hidden">
+              <div className="p-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                <div className="flex items-center space-x-3">
                   <MapPin className="w-6 h-6" />
-                  <h3 className="text-xl font-semibold">Route Map</h3>
+                  <h3 className="text-2xl font-bold">Route Preview</h3>
                 </div>
               </div>
-              
+
               <div className="h-96">
                 {coordinates ? (
-                  <MapContainer 
-                    center={yorkCoords} 
-                    zoom={11} 
+                  <MapContainer
+                    center={coordinates}
+                    zoom={11}
                     style={{ height: "100%", width: "100%" }}
-                    className="z-0"
+                    className="rounded-b-2xl"
                   >
                     <TileLayer
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -305,59 +562,65 @@ export default function Rider() {
                     <Marker position={coordinates}>
                       <Popup>
                         <div className="text-center">
-                          <MapPin className="w-4 h-4 text-red-500 mx-auto mb-1" />
-                          <strong>Your Home</strong>
+                          <strong>📍 Your Home</strong>
+                          <br />
+                          <span className="text-sm text-gray-600">{homeAddress}</span>
                         </div>
                       </Popup>
                     </Marker>
                     <Marker position={yorkCoords}>
                       <Popup>
                         <div className="text-center">
-                          <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-1"></div>
-                          <strong>York University</strong>
+                          <strong>🎓 York University</strong>
+                          <br />
+                          <span className="text-sm text-gray-600">Destination</span>
                         </div>
                       </Popup>
                     </Marker>
-                    <Polyline 
-                      positions={[coordinates, yorkCoords]} 
-                      color="#3B82F6" 
+                    <Polyline
+                      positions={[coordinates, yorkCoords]}
+                      color="#3B82F6"
                       weight={4}
+                      dashArray="10, 5"
                       opacity={0.8}
-                      dashArray="10, 10"
                     />
                   </MapContainer>
                 ) : (
-                  <div className="h-full flex items-center justify-center bg-gray-50">
-                    <div className="text-center text-gray-500">
-                      <MapPin className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="text-lg">Enter your address to see the route</p>
-                      <p className="text-sm">We'll show you the path to York University</p>
-                    </div>
+                  <div className="h-full flex flex-col items-center justify-center text-gray-500 bg-gray-50">
+                    <MapPin className="w-16 h-16 text-gray-300 mb-4" />
+                    <p className="text-lg font-medium">Route Preview</p>
+                    <p className="text-sm">Your route will appear here after finding a match</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Stats Section */}
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { icon: Users, title: "Students Connected", value: "2,847", color: "text-blue-500" },
-              { icon: Car, title: "Rides Completed", value: "15,623", color: "text-green-500" },
-              { icon: DollarSign, title: "Money Saved", value: "$432", color: "text-purple-500" }
-            ].map((stat, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
-                <div className="flex items-center space-x-3">
-                  <div className={`p-3 rounded-full bg-gray-100`}>
-                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-                    <p className="text-sm text-gray-600">{stat.title}</p>
-                  </div>
-                </div>
+          {/* Info Cards */}
+          <div className="grid md:grid-cols-3 gap-6 mt-8">
+            <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <DollarSign className="w-6 h-6 text-blue-600" />
               </div>
-            ))}
+              <h4 className="font-semibold text-gray-800 mb-2">Save Money</h4>
+              <p className="text-sm text-gray-600">Split costs with fellow students and save up to 70% on transportation</p>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-6 h-6 text-green-600" />
+              </div>
+              <h4 className="font-semibold text-gray-800 mb-2">Meet People</h4>
+              <p className="text-sm text-gray-600">Connect with other York students and build lasting friendships</p>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Car className="w-6 h-6 text-purple-600" />
+              </div>
+              <h4 className="font-semibold text-gray-800 mb-2">Reliable Rides</h4>
+              <p className="text-sm text-gray-600">Verified drivers with high ratings ensure safe, punctual transportation</p>
+            </div>
           </div>
         </div>
       </div>

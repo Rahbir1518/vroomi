@@ -1,207 +1,365 @@
-import { useState } from "react";
-import { Car, Calendar, Hash, Sparkles, CheckCircle, ArrowRight, User } from "lucide-react";
-import { useUser, UserButton } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useUser } from "@clerk/clerk-react";
+import { Car, Plus, Edit, Trash2, Save, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { dbHelpers, setSupabaseSession } from './lib/supabase';
 
-export default function CarDetail() {
+interface CarData {
+  id?: string;
+  user_id: string;
+  make: string;
+  model: string;
+  year: number;
+  license: string;
+  seats: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface CarDetailsProps {
+  onCarSelect?: (car: CarData) => void;
+  selectedCarId?: string;
+}
+
+export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsProps) {
   const { user } = useUser();
-  const navigate = useNavigate();
+  const [cars, setCars] = useState<CarData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingCar, setEditingCar] = useState<CarData | null>(null);
+  
+  const [formData, setFormData] = useState({
+    make: '',
+    model: '',
+    year: new Date().getFullYear(),
+    license: '',
+    seats: 4
+  });
 
-  const [make, setMake]       = useState("");
-  const [model, setModel]     = useState("");
-  const [year, setYear]       = useState("");
-  const [license, setLicense] = useState("");
-  const [seats, setSeats]     = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // 🛠 Setup Supabase session using Clerk token
+  useEffect(() => {
+    const setupSupabaseSession = async () => {
+      if (user) {
+        try {
+          const token = await (user as any).getToken?.({ template: 'supabase' });
+          if (token) {
+            await setSupabaseSession(token);
+          } else {
+            console.error('Missing Supabase token from Clerk.');
+            setError('Authentication failed. Please sign out and back in.');
+          }
+        } catch (err) {
+          console.error('Failed to set Supabase session:', err);
+          setError('Authentication error. Try refreshing the page.');
+        }
+      }
+    };
+    setupSupabaseSession();
+  }, [user]);
 
-  // now require seats as well
-  const isFormValid = make && model && year && license && seats;
+  // Load user's cars on component mount
+  useEffect(() => {
+    if (user?.id) {
+      loadCars();
+    }
+  }, [user]);
 
-  const handleSave = async () => {
-    if (!isFormValid) return;
-    setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    // TODO: persist data
-    alert("Car details saved successfully!");
-    setIsSubmitting(false);
-    navigate("/driver");
+  const loadCars = async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    try {
+      const userCars = await dbHelpers.getCarsByUserId(user.id);
+      setCars(userCars);
+    } catch (err) {
+      console.error('Error loading cars:', err);
+      setError('Failed to load your cars');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // progress out of 5 fields
-  const filledCount = [make, model, year, license, seats].filter(Boolean).length;
-  const progress = Math.round((filledCount / 5) * 100);
+  const resetForm = () => {
+    setFormData({
+      make: '',
+      model: '',
+      year: new Date().getFullYear(),
+      license: '',
+      seats: 4
+    });
+    setEditingCar(null);
+    setShowForm(false);
+    setError('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      if (editingCar) {
+        const updatedCar = await dbHelpers.updateCar(editingCar.id!, formData);
+        setCars(cars.map(car => car.id === editingCar.id ? updatedCar : car));
+        setSuccess('Car updated successfully!');
+      } else {
+        const newCarData = {
+          ...formData,
+          user_id: user.id
+        };
+        const newCar = await dbHelpers.createCar(newCarData);
+        setCars([...cars, newCar]);
+        setSuccess('Car added successfully!');
+      }
+
+      resetForm();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error saving car:', err);
+      setError('Failed to save car. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEdit = (car: CarData) => {
+    setFormData({
+      make: car.make,
+      model: car.model,
+      year: car.year,
+      license: car.license,
+      seats: car.seats
+    });
+    setEditingCar(car);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (carId: string) => {
+    if (!window.confirm('Are you sure you want to delete this car?')) return;
+
+    setIsLoading(true);
+    try {
+      await dbHelpers.deleteCar(carId);
+      setCars(cars.filter(car => car.id !== carId));
+      setSuccess('Car deleted successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error deleting car:', err);
+      setError('Failed to delete car. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCarSelect = (car: CarData) => {
+    if (onCarSelect) {
+      onCarSelect(car);
+    }
+  };
+
+  if (isLoading && cars.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <span className="ml-2">Loading your cars...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center relative overflow-hidden">
-      {/* Animated BG omitted for brevity */}
-
-      <header className="w-full bg-white/10 backdrop-blur-md border-b border-white/20 relative z-10">
-        <div className="max-w-4xl mx-auto p-6 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
-              <Car className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Add Your Vehicle
-            </h1>
-          </div>
-          <UserButton afterSignOutUrl="/login" appearance={{ elements: { avatarBox: "w-10 h-10" } }} />
+    <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <Car className="w-6 h-6 text-blue-600" />
+          <h2 className="text-xl font-semibold text-gray-900">Your Vehicles</h2>
         </div>
-      </header>
+        <button
+          onClick={() => setShowForm(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Car</span>
+        </button>
+      </div>
 
-      <main className="flex-1 w-full max-w-lg relative z-10 p-6">
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 mt-8 transform hover:scale-[1.02] transition-all duration-300">
-          {/* Greeting */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full px-4 py-2 mb-4">
-              <Sparkles className="w-4 h-4 text-purple-300" />
-              <span className="text-white/80 text-sm">Let's get started</span>
-            </div>
-            <p className="text-white/90 text-lg">
-              Hello,&nbsp;
-              <span className="font-semibold text-purple-300">
-                {user?.firstName ?? user?.fullName ?? "Student"}
-              </span>
-              ! Tell us about your amazing ride:
-            </p>
+      {success && (
+        <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg">
+          <div className="flex items-center">
+            <CheckCircle className="w-5 h-5 mr-2" />
+            <span>{success}</span>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg">
+          <div className="flex items-center">
+            <AlertCircle className="w-5 h-5 mr-2" />
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="mb-6 p-6 bg-gray-50 rounded-lg border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              {editingCar ? 'Edit Car' : 'Add New Car'}
+            </h3>
+            <button
+              onClick={resetForm}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Form Fields */}
-          <div className="space-y-6">
-            {/* Make */}
-            <div className="group">
-              <label className="flex items-center space-x-2 mb-3">
-                <Car className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80 font-medium">Make</span>
-              </label>
-              <div className="relative">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Make</label>
                 <input
-                  value={make}
-                  onChange={e => setMake(e.target.value)}
-                  placeholder="e.g. Tesla, BMW, Toyota"
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 backdrop-blur-sm hover:bg-white/15"
-                />
-                {make && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400 animate-scale-in" />}
-              </div>
-            </div>
-
-            {/* Model */}
-            <div className="group">
-              <label className="flex items-center space-x-2 mb-3">
-                <Sparkles className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80 font-medium">Model</span>
-              </label>
-              <div className="relative">
-                <input
-                  value={model}
-                  onChange={e => setModel(e.target.value)}
-                  placeholder="e.g. Model S, X5, Corolla"
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 backdrop-blur-sm hover:bg-white/15"
-                />
-                {model && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400 animate-scale-in" />}
-              </div>
-            </div>
-
-            {/* Year */}
-            <div className="group">
-              <label className="flex items-center space-x-2 mb-3">
-                <Calendar className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80 font-medium">Year</span>
-              </label>
-              <div className="relative">
-                <input
-                  value={year}
-                  onChange={e => setYear(e.target.value)}
-                  type="number" min="1900" max={new Date().getFullYear()}
-                  placeholder="e.g. 2023"
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 backdrop-blur-sm hover:bg-white/15"
-                />
-                {year && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400 animate-scale-in" />}
-              </div>
-            </div>
-
-            {/* License */}
-            <div className="group">
-              <label className="flex items-center space-x-2 mb-3">
-                <Hash className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80 font-medium">License Plate</span>
-              </label>
-              <div className="relative">
-                <input
-                  value={license}
-                  onChange={e => setLicense(e.target.value)}
-                  placeholder="e.g. ABC-1234"
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 backdrop-blur-sm hover:bg-white/15"
-                />
-                {license && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400 animate-scale-in" />}
-              </div>
-            </div>
-
-            {/* Number of Seats */}
-            <div className="group">
-              <label className="flex items-center space-x-2 mb-3">
-                <User className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80 font-medium">Seats</span>
-              </label>
-              <div className="relative">
-                <input
-                  value={seats}
-                  onChange={e => setSeats(e.target.value.replace(/\D/, ""))}
                   type="text"
-                  placeholder="e.g. 4"
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 backdrop-blur-sm hover:bg-white/15"
+                  value={formData.make}
+                  onChange={(e) => setFormData({ ...formData, make: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                  required
                 />
-                {seats && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400 animate-scale-in" />}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                <input
+                  type="text"
+                  value={formData.model}
+                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                  required
+                />
               </div>
             </div>
-          </div>
 
-          {/* Submit */}
-          <button
-            onClick={handleSave}
-            disabled={!isFormValid || isSubmitting}
-            className={`w-full mt-8 py-4 rounded-2xl font-semibold text-white transition-all duration-300 transform ${
-              isFormValid && !isSubmitting
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:scale-105 shadow-lg"
-                : "bg-gray-600 cursor-not-allowed opacity-50"
-            } flex items-center justify-center space-x-2`}
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                <span>Saving your ride...</span>
-              </>
-            ) : (
-              <>
-                <span>Save My Vehicle</span>
-                <ArrowRight className="w-5 h-5" />
-              </>
-            )}
-          </button>
-
-          {/* Progress */}
-          <div className="mt-6">
-            <div className="flex justify-between text-xs text-white/60 mb-2">
-              <span>Progress</span>
-              <span>{progress}%</span>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                <input
+                  type="number"
+                  value={formData.year}
+                  onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Seats</label>
+                <select
+                  value={formData.seats}
+                  onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                  required
+                >
+                  {[1,2,3,4,5,6,7].map(seat => (
+                    <option key={seat} value={seat}>{seat} {seat === 1 ? 'seat' : 'seats'}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className="w-full bg-white/10 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${progress}%` }}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">License Plate</label>
+              <input
+                type="text"
+                value={formData.license}
+                onChange={(e) => setFormData({ ...formData, license: e.target.value.toUpperCase() })}
+                className="w-full px-3 py-2 border rounded-lg"
+                required
               />
             </div>
-          </div>
-        </div>
-      </main>
 
-      <style>{`
-        @keyframes scale-in {
-          0% { transform: scale(0) translateY(-50%); opacity: 0; }
-          100% { transform: scale(1) translateY(-50%); opacity: 1; }
-        }
-        .animate-scale-in { animation: scale-in 0.3s ease-out; }
-      `}</style>
+            <div className="flex space-x-3">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isLoading ? 'Saving...' : editingCar ? 'Update Car' : 'Add Car'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {cars.length === 0 ? (
+        <div className="text-center py-8">
+          <Car className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No cars added yet</h3>
+          <p className="text-gray-600 mb-4">Add your first car to start offering rides</p>
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Add Your First Car
+          </button>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {cars.map((car) => (
+            <div
+              key={car.id}
+              className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                selectedCarId === car.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => handleCarSelect(car)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Car className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">
+                      {car.year} {car.make} {car.model}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      License: {car.license} • {car.seats} seats available
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(car);
+                    }}
+                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(car.id!);
+                    }}
+                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
