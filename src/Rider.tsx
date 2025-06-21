@@ -1,7 +1,366 @@
+import { useState, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { Car, MapPin, Clock, DollarSign, Users, Search, CheckCircle, AlertCircle } from "lucide-react";
+import L from "leaflet";
+
+// Fix Leaflet default markers - Modern approach
+const DefaultIcon = L.icon({
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+interface Driver {
+  name: string;
+  vehicle: string;
+  rating: number;
+  trips: number;
+  departure: string;
+}
+
 export default function Rider() {
+  const [departureTime, setDepartureTime] = useState("");
+  const [homeAddress, setHomeAddress] = useState("");
+  const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
+  const [matchedDriver, setMatchedDriver] = useState<Driver | null>(null);
+  const [estimatedCost, setEstimatedCost] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const yorkCoords: [number, number] = [43.7735, -79.5019]; // York University
+
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => setShowSuccess(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess]);
+
+  const handleMatch = async () => {
+    if (!homeAddress.trim()) {
+      setError("Please enter your home address");
+      return;
+    }
+
+    if (!departureTime) {
+      setError("Please select a departure time");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Use OpenStreetMap Nominatim API for geocoding
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(homeAddress + ", Toronto, Ontario")}&limit=1`
+      );
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        setCoordinates([lat, lon]);
+
+        // Simulate matching delay for better UX
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // Mock match with more realistic data
+        const drivers = [
+          { name: "Sarah Chen", vehicle: "Honda Civic 2022", rating: 4.9, trips: 127 },
+          { name: "Michael Rodriguez", vehicle: "Toyota Corolla 2021", rating: 4.8, trips: 89 },
+          { name: "Emily Zhang", vehicle: "Nissan Sentra 2023", rating: 5.0, trips: 64 },
+        ];
+        
+        const randomDriver = drivers[Math.floor(Math.random() * drivers.length)];
+        setMatchedDriver({
+          ...randomDriver,
+          departure: departureTime,
+        } as Driver);
+
+        // Calculate distance and cost
+        const R = 6371; // km
+        const dLat = ((yorkCoords[0] - lat) * Math.PI) / 180;
+        const dLon = ((yorkCoords[1] - lon) * Math.PI) / 180;
+        const a =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos((lat * Math.PI) / 180) *
+            Math.cos((yorkCoords[0] * Math.PI) / 180) *
+            Math.sin(dLon / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c;
+
+        setEstimatedCost(parseFloat((distance * 0.45 + 2.5).toFixed(2))); // Base fee + per km
+        setShowSuccess(true);
+      } else {
+        setError("Could not find your address. Please try a more specific address.");
+      }
+    } catch (err) {
+      setError("Failed to find location. Please check your internet connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setCoordinates(null);
+    setMatchedDriver(null);
+    setEstimatedCost(null);
+    setError("");
+    setShowSuccess(false);
+  };
+
   return (
-    <div>
-      <h1>Rider Page</h1>
-    </div>
-  )
+    <>
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossOrigin=""
+      />
+      
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
+        {/* Success Animation */}
+        {showSuccess && (
+          <div className="fixed top-4 right-4 z-50 transform transition-all duration-500 ease-out animate-pulse">
+            <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">Match found successfully!</span>
+            </div>
+          </div>
+        )}
+
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8 transform transition-all duration-700 ease-out">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 transform hover:scale-110 transition-transform duration-300">
+              <Car className="w-8 h-8 text-blue-600" />
+            </div>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">
+              Vroomi
+            </h1>
+            <p className="text-gray-600">Connect peers for affordable rides</p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Form Section */}
+            <div className="bg-white shadow-xl rounded-xl p-8 transform transition-all duration-500 hover:shadow-2xl">
+              <div className="flex items-center space-x-2 mb-6">
+                <Users className="w-6 h-6 text-blue-600" />
+                <h2 className="text-2xl font-semibold text-gray-800">Find Your Ride</h2>
+              </div>
+
+              <div className="space-y-6">
+                <div className="transform transition-all duration-300 hover:scale-105">
+                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
+                    <Clock className="w-4 h-4 text-blue-500" />
+                    <span>Departure Time</span>
+                  </label>
+                  <input
+                    type="time"
+                    value={departureTime}
+                    onChange={(e) => setDepartureTime(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300"
+                  />
+                </div>
+
+                <div className="transform transition-all duration-300 hover:scale-105">
+                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
+                    <MapPin className="w-4 h-4 text-red-500" />
+                    <span>Home Address</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={homeAddress}
+                    onChange={(e) => {
+                      setHomeAddress(e.target.value);
+                      setError("");
+                    }}
+                    placeholder="123 Main St, Toronto, ON"
+                    className="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300"
+                  />
+                </div>
+
+                {error && (
+                  <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 animate-pulse">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm">{error}</span>
+                  </div>
+                )}
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleMatch}
+                    disabled={isLoading}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-semibold transform transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        <span>Searching...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-4 h-4" />
+                        <span>Find Match</span>
+                      </>
+                    )}
+                  </button>
+                  
+                  {matchedDriver && (
+                    <button
+                      onClick={resetForm}
+                      className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all duration-300 hover:scale-105"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Match Results */}
+              {matchedDriver && coordinates && (
+                <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200 transform transition-all duration-700 ease-out animate-pulse">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                    <h3 className="text-xl font-semibold text-gray-800">Perfect Match Found!</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm text-gray-600">Driver:</span>
+                        <span className="font-semibold">{matchedDriver.name}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Car className="w-4 h-4 text-purple-500" />
+                        <span className="text-sm text-gray-600">Vehicle:</span>
+                        <span className="font-semibold">{matchedDriver.vehicle}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4 text-orange-500" />
+                        <span className="text-sm text-gray-600">Departure:</span>
+                        <span className="font-semibold">{matchedDriver.departure}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <DollarSign className="w-4 h-4 text-green-500" />
+                        <span className="text-sm text-gray-600">Cost:</span>
+                        <span className="font-semibold text-green-600">${estimatedCost?.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm text-gray-600">Rating:</span>
+                      <div className="flex text-yellow-400">
+                        {'★'.repeat(Math.floor(matchedDriver.rating))}
+                      </div>
+                      <span className="text-sm font-semibold">{matchedDriver.rating}</span>
+                      <span className="text-xs text-gray-500">({matchedDriver.trips} trips)</span>
+                    </div>
+                    
+                    <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transform transition-all duration-300 hover:scale-105">
+                      Contact Driver
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Map Section */}
+            <div className="bg-white shadow-xl rounded-xl overflow-hidden transform transition-all duration-500 hover:shadow-2xl">
+              <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-6 h-6" />
+                  <h3 className="text-xl font-semibold">Route Map</h3>
+                </div>
+              </div>
+              
+              <div className="h-96">
+                {coordinates ? (
+                  <MapContainer 
+                    center={yorkCoords} 
+                    zoom={11} 
+                    style={{ height: "100%", width: "100%" }}
+                    className="z-0"
+                  >
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    />
+                    <Marker position={coordinates}>
+                      <Popup>
+                        <div className="text-center">
+                          <MapPin className="w-4 h-4 text-red-500 mx-auto mb-1" />
+                          <strong>Your Home</strong>
+                        </div>
+                      </Popup>
+                    </Marker>
+                    <Marker position={yorkCoords}>
+                      <Popup>
+                        <div className="text-center">
+                          <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-1"></div>
+                          <strong>York University</strong>
+                        </div>
+                      </Popup>
+                    </Marker>
+                    <Polyline 
+                      positions={[coordinates, yorkCoords]} 
+                      color="#3B82F6" 
+                      weight={4}
+                      opacity={0.8}
+                      dashArray="10, 10"
+                    />
+                  </MapContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center bg-gray-50">
+                    <div className="text-center text-gray-500">
+                      <MapPin className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg">Enter your address to see the route</p>
+                      <p className="text-sm">We'll show you the path to York University</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Section */}
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { icon: Users, title: "Students Connected", value: "2,847", color: "text-blue-500" },
+              { icon: Car, title: "Rides Completed", value: "15,623", color: "text-green-500" },
+              { icon: DollarSign, title: "Money Saved", value: "$432", color: "text-purple-500" }
+            ].map((stat, index) => (
+              <div key={index} className="bg-white rounded-xl p-6 shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
+                <div className="flex items-center space-x-3">
+                  <div className={`p-3 rounded-full bg-gray-100`}>
+                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+                    <p className="text-sm text-gray-600">{stat.title}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
