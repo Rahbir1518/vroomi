@@ -28,7 +28,7 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
   const [success, setSuccess] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingCar, setEditingCar] = useState<CarData | null>(null);
-  
+
   const [formData, setFormData] = useState({
     make: '',
     model: '',
@@ -37,32 +37,25 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
     seats: 4
   });
 
-  // 🛠 Setup Supabase session using Clerk token
+  // 🛡 Setup Supabase session once per user login
   useEffect(() => {
-    const setupSupabaseSession = async () => {
+    const setupSupabaseAuth = async () => {
       if (user) {
         try {
           const token = await (user as any).getToken?.({ template: 'supabase' });
-          if (token) {
-            await setSupabaseSession(token);
-          } else {
-            console.error('Missing Supabase token from Clerk.');
-            setError('Authentication failed. Please sign out and back in.');
-          }
+          if (!token) throw new Error('No Supabase token returned by Clerk');
+
+          await setSupabaseSession(token);
+          setError('');
+          loadCars(); // Load data after session is set
         } catch (err) {
-          console.error('Failed to set Supabase session:', err);
-          setError('Authentication error. Try refreshing the page.');
+          console.error('Supabase session error:', err);
+          setError('Authentication failed. Please sign out and back in.');
         }
       }
     };
-    setupSupabaseSession();
-  }, [user]);
 
-  // Load user's cars on component mount
-  useEffect(() => {
-    if (user?.id) {
-      loadCars();
-    }
+    setupSupabaseAuth();
   }, [user]);
 
   const loadCars = async () => {
@@ -103,15 +96,11 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
     try {
       if (editingCar) {
         const updatedCar = await dbHelpers.updateCar(editingCar.id!, formData);
-        setCars(cars.map(car => car.id === editingCar.id ? updatedCar : car));
+        setCars(prev => prev.map(car => car.id === editingCar.id ? updatedCar : car));
         setSuccess('Car updated successfully!');
       } else {
-        const newCarData = {
-          ...formData,
-          user_id: user.id
-        };
-        const newCar = await dbHelpers.createCar(newCarData);
-        setCars([...cars, newCar]);
+        const newCar = await dbHelpers.createCar({ ...formData, user_id: user.id });
+        setCars(prev => [...prev, newCar]);
         setSuccess('Car added successfully!');
       }
 
@@ -143,7 +132,7 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
     setIsLoading(true);
     try {
       await dbHelpers.deleteCar(carId);
-      setCars(cars.filter(car => car.id !== carId));
+      setCars(prev => prev.filter(car => car.id !== carId));
       setSuccess('Car deleted successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -155,9 +144,7 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
   };
 
   const handleCarSelect = (car: CarData) => {
-    if (onCarSelect) {
-      onCarSelect(car);
-    }
+    onCarSelect?.(car);
   };
 
   if (isLoading && cars.length === 0) {
@@ -171,6 +158,21 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6">
+      {/* Success + Error Alerts */}
+      {success && (
+        <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg flex items-center">
+          <CheckCircle className="w-5 h-5 mr-2" />
+          <span>{success}</span>
+        </div>
+      )}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg flex items-center">
+          <AlertCircle className="w-5 h-5 mr-2" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <Car className="w-6 h-6 text-blue-600" />
@@ -178,41 +180,19 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
           <span>Add Car</span>
         </button>
       </div>
 
-      {success && (
-        <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg">
-          <div className="flex items-center">
-            <CheckCircle className="w-5 h-5 mr-2" />
-            <span>{success}</span>
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg">
-          <div className="flex items-center">
-            <AlertCircle className="w-5 h-5 mr-2" />
-            <span>{error}</span>
-          </div>
-        </div>
-      )}
-
+      {/* Form */}
       {showForm && (
         <div className="mb-6 p-6 bg-gray-50 rounded-lg border">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">
-              {editingCar ? 'Edit Car' : 'Add New Car'}
-            </h3>
-            <button
-              onClick={resetForm}
-              className="text-gray-500 hover:text-gray-700"
-            >
+            <h3 className="text-lg font-medium text-gray-900">{editingCar ? 'Edit Car' : 'Add New Car'}</h3>
+            <button onClick={resetForm} className="text-gray-500 hover:text-gray-700">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -224,7 +204,7 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
                 <input
                   type="text"
                   value={formData.make}
-                  onChange={(e) => setFormData({ ...formData, make: e.target.value })}
+                  onChange={e => setFormData({ ...formData, make: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg"
                   required
                 />
@@ -234,7 +214,7 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
                 <input
                   type="text"
                   value={formData.model}
-                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                  onChange={e => setFormData({ ...formData, model: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg"
                   required
                 />
@@ -247,7 +227,7 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
                 <input
                   type="number"
                   value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                  onChange={e => setFormData({ ...formData, year: parseInt(e.target.value) })}
                   className="w-full px-3 py-2 border rounded-lg"
                   required
                 />
@@ -256,11 +236,11 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
                 <label className="block text-sm font-medium text-gray-700 mb-1">Seats</label>
                 <select
                   value={formData.seats}
-                  onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) })}
+                  onChange={e => setFormData({ ...formData, seats: parseInt(e.target.value) })}
                   className="w-full px-3 py-2 border rounded-lg"
                   required
                 >
-                  {[1,2,3,4,5,6,7].map(seat => (
+                  {[1, 2, 3, 4, 5, 6, 7].map(seat => (
                     <option key={seat} value={seat}>{seat} {seat === 1 ? 'seat' : 'seats'}</option>
                   ))}
                 </select>
@@ -272,7 +252,7 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
               <input
                 type="text"
                 value={formData.license}
-                onChange={(e) => setFormData({ ...formData, license: e.target.value.toUpperCase() })}
+                onChange={e => setFormData({ ...formData, license: e.target.value.toUpperCase() })}
                 className="w-full px-3 py-2 border rounded-lg"
                 required
               />
@@ -299,6 +279,7 @@ export default function CarDetails({ onCarSelect, selectedCarId }: CarDetailsPro
         </div>
       )}
 
+      {/* Car List */}
       {cars.length === 0 ? (
         <div className="text-center py-8">
           <Car className="w-16 h-16 text-gray-300 mx-auto mb-4" />
