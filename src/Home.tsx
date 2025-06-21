@@ -8,19 +8,19 @@ export default function Home() {
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tertiary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-tertiary/20">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-tertiary/80 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">V</span>
               </div>
               <span className="text-2xl font-bold text-gray-900">VROOMI</span>
@@ -41,13 +41,13 @@ export default function Home() {
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => navigate('/login')}
-                    className="px-4 py-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                    className="px-4 py-2 text-tertiary hover:text-tertiary/70 hover:cursor-pointer font-medium transition-colors"
                   >
                     Login
                   </button>
                   <button
                     onClick={() => navigate('/register')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                    className="px-4 py-2 bg-tertiary text-white rounded-lg hover:bg-tertiary/70 hover:cursor-pointer font-medium transition-colors"
                   >
                     Sign Up
                   </button>
@@ -62,7 +62,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 py-12">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-extrabold text-gray-900 mb-6">
-            Smart Campus <span className="text-blue-600">Ride-Sharing</span>
+            Smart Campus <span className="text-secondary">Ride-Sharing</span>
           </h1>
           <p className="text-xl text-gray-600 mb-4 max-w-3xl mx-auto">
             Connect with verified university students, split travel costs, and reduce your carbon footprint 
@@ -136,7 +136,7 @@ export default function Home() {
         </div>
 
         {/* Environmental Impact */}
-        <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-2xl p-8 text-white text-center mb-16">
+        <div className="bg-gradient-to-r from-secondary to-tertiary/50 rounded-2xl p-8 text-white text-center mb-16">
           <h2 className="text-3xl font-bold mb-4">Reduce Your Carbon Footprint</h2>
           <p className="text-lg mb-6 opacity-90">
             Every shared ride helps reduce campus emissions and traffic congestion
@@ -165,7 +165,7 @@ export default function Home() {
               <>
                 <Link 
                   to="/welcome" 
-                  className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+                  className="inline-flex items-center px-8 py-4 bg-tertiary text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -183,7 +183,7 @@ export default function Home() {
               <>
                 <button
                   onClick={() => navigate('/login')}
-                  className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+                  className="inline-flex items-center px-8 py-4 bg-tertiary hover:bg-tertiary/70 hover:cursor-pointer text-white font-semibold rounded-lg transition-colors shadow-lg"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -192,7 +192,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => navigate('/register')}
-                  className="inline-flex items-center px-8 py-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+                  className="inline-flex items-center px-8 py-4 bg-gray-100 hover:cursor-pointer text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Create Account
                 </button>
