@@ -2,7 +2,14 @@ import { useState } from "react";
 import { Car, Calendar, Hash, Sparkles, CheckCircle, ArrowRight, User } from "lucide-react";
 import { useUser, UserButton } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+console.log("Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
+console.log("Supabase ANON Key:", import.meta.env.VITE_SUPABASE_ANON_KEY);
 export default function CarDetail() {
   const { user } = useUser();
   const navigate = useNavigate();
@@ -14,14 +21,37 @@ export default function CarDetail() {
   const [seats, setSeats]     = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // now require seats as well
-  const isFormValid = make && model && year && license && seats;
+  // require all fields
+  const isFormValid = Boolean(make && model && year && license && seats);
 
   const handleSave = async () => {
     if (!isFormValid) return;
+    if (!user?.id) {
+      alert("User not loaded yet. Please sign in again.");
+      return;
+    }
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    // TODO: persist data
+
+    const payload = {
+      user_id: user.id,
+      make,
+      model,
+      year: Number(year),
+      license,
+      seats: Number(seats),
+    };
+
+    console.log("Inserting vehicle:", payload);
+    const { data, error } = await supabase.from("cars").insert([payload]);
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+      alert("Error saving car: " + error.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    console.log("Insert result:", data);
     alert("Car details saved successfully!");
     setIsSubmitting(false);
     navigate("/driver");
@@ -33,7 +63,7 @@ export default function CarDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center relative overflow-hidden">
-      {/* Animated BG omitted for brevity */}
+      {/* Animated background omitted for brevity */}
 
       <header className="w-full bg-white/10 backdrop-blur-md border-b border-white/20 relative z-10">
         <div className="max-w-4xl mx-auto p-6 flex justify-between items-center">
@@ -137,7 +167,7 @@ export default function CarDetail() {
               </div>
             </div>
 
-            {/* Number of Seats */}
+            {/* Seats */}
             <div className="group">
               <label className="flex items-center space-x-2 mb-3">
                 <User className="w-4 h-4 text-purple-400" />
@@ -156,7 +186,7 @@ export default function CarDetail() {
             </div>
           </div>
 
-          {/* Submit */}
+          {/* Submit Button */}
           <button
             onClick={handleSave}
             disabled={!isFormValid || isSubmitting}
@@ -179,7 +209,7 @@ export default function CarDetail() {
             )}
           </button>
 
-          {/* Progress */}
+          {/* Progress Bar */}
           <div className="mt-6">
             <div className="flex justify-between text-xs text-white/60 mb-2">
               <span>Progress</span>
