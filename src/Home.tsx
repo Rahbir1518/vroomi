@@ -1,5 +1,6 @@
 import { useUser, UserButton } from "@clerk/clerk-react";
 import { Link, useNavigate } from "react-router-dom";
+import logo from "../image/logo1.png"
 
 export default function Home() {
   const { user, isLoaded } = useUser();
@@ -20,11 +21,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-tertiary/80 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">V</span>
+              <div className="">
+                <img
+                src={logo} alt="Vroomi" 
+                className="w-35 md:w-37 h-15 rounded-full object-cover"
+                />
               </div>
-              <span className="text-2xl font-bold text-gray-900">VROOMI</span>
-              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+              <span className="px-2 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
                 Campus
               </span>
             </div>
