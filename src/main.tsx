@@ -12,6 +12,7 @@ import Choose from './Choose.tsx'
 import Driver from './Driver.tsx'
 import Rider from './Rider.tsx'
 import ProtectedRoute from './ProtectedRoute.tsx'
+import CarDetails from './carDetails.tsx'
 import "leaflet/dist/leaflet.css";
 
 // Import your publishable key
@@ -78,7 +79,15 @@ function AppRouter() {
           </ProtectedRoute>
         } 
       />
-      
+      <Route 
+        path="/carDetail" 
+        element={
+          <ProtectedRoute>
+            <CarDetails />
+          </ProtectedRoute>
+        } 
+      />
+
       <Route 
         path="/driver" 
         element={
