@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import { Car, MapPin, Clock, DollarSign, Users, Search, CheckCircle, AlertCircle } from "lucide-react";
 import L from "leaflet";
+import { Link } from "react-router-dom";
+import logo from "../image/logo1.png"
 
 // Fix Leaflet default markers - Modern approach
 const DefaultIcon = L.icon({
@@ -140,12 +142,13 @@ export default function Rider() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8 transform transition-all duration-700 ease-out">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 transform hover:scale-110 transition-transform duration-300">
-              <Car className="w-8 h-8 text-blue-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">
-              Vroomi
-            </h1>
+            
+            <Link to="/" className="mb-2 flex items-center justify-center">
+              <img
+                src={logo} alt="Vroomi" 
+                className="w-35 md:w-37 h-15 object-cover"
+                />
+            </Link>
             <p className="text-gray-600">Connect peers for affordable rides</p>
           </div>
 
@@ -199,7 +202,7 @@ export default function Rider() {
                   <button
                     onClick={handleMatch}
                     disabled={isLoading}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-semibold transform transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-6 rounded-lg font-semibold transform transition-all duration-300 hover:from-green-700 hover:to-green-600 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
                   >
                     {isLoading ? (
                       <>
@@ -283,7 +286,7 @@ export default function Rider() {
 
             {/* Map Section */}
             <div className="bg-white shadow-xl rounded-xl overflow-hidden transform transition-all duration-500 hover:shadow-2xl">
-              <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+              <div className="p-6 bg-gradient-to-r from-green-600 to-green-700 text-white">
                 <div className="flex items-center space-x-2">
                   <MapPin className="w-6 h-6" />
                   <h3 className="text-xl font-semibold">Route Map</h3>
