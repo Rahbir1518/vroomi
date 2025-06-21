@@ -1,5 +1,6 @@
 import { useUser, UserButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
+import logo from "../image/logo1.png"
 
 export default function Choose() {
   const { user } = useUser();
@@ -9,10 +10,18 @@ export default function Choose() {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <Link to="/" className="text-2xl font-bold text-tertiary">
-              VROOMI
+          <div className="flex justify-between items-center py-4 ">
+            <div className="flex items-center space-x-4">
+            <Link to="/" className="">
+              <img
+                src={logo} alt="Vroomi" 
+                className="w-35 md:w-37 h-15 object-cover"
+                />
             </Link>
+            <span className="px-2 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
+                Campus
+              </span> 
+            </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600 hidden sm:block">
                 {user?.firstName || "User"}

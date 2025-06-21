@@ -1,6 +1,7 @@
-import { useUser, UserButton } from "@clerk/clerk-react";
+  import { useUser, UserButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import logo from "../image/logo1.png"
 
 export default function Driver() {
   const { user } = useUser();
@@ -13,8 +14,13 @@ export default function Driver() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="text-2xl font-bold text-blue-600">VROOMI</Link>
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
+              <Link to="/" className="">
+              <img
+                src={logo} alt="Vroomi" 
+                className="w-35 md:w-37 h-15 object-cover"
+                />
+            </Link>
+              <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
                 Driver Dashboard
               </span>
             </div>
@@ -112,7 +118,7 @@ export default function Driver() {
             <ul className="flex space-x-6">
               <li>
                 <button
-                  className={`pb-2 ${activeTab === 'dashboard' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+                  className={`pb-2 cursor-pointer ${activeTab === 'dashboard' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
                   onClick={() => setActiveTab('dashboard')}
                 >
                   Dashboard
@@ -120,7 +126,7 @@ export default function Driver() {
               </li>
               <li>
                 <button
-                  className={`pb-2 ${activeTab === 'rides' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+                  className={`pb-2 cursor-pointer ${activeTab === 'rides' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
                   onClick={() => setActiveTab('rides')}
                 >
                   My Rides
