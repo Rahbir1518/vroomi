@@ -13,6 +13,7 @@ import Driver from './Driver.tsx'
 import Rider from './Rider.tsx'
 import ProtectedRoute from './ProtectedRoute.tsx'
 import CarDetails from './carDetails.tsx'
+import "leaflet/dist/leaflet.css";
 
 // Import your publishable key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
