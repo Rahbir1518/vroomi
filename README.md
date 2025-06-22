@@ -1,54 +1,47 @@
-# React + TypeScript + Vite
+# 🚗 Vroomi – Campus Ride-Sharing Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Vroomi is a student-first ride-sharing web app designed to make commuting smarter, safer, and more sustainable. Whether you're heading to a 9 a.m. lecture or returning from a late-night study session, Vroomi matches you with trusted peers for shared rides—saving time, money, and carbon emissions.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## Expanding the ESLint configuration
+- 🔐 **Student-Only Access** – Verify with a university email using Clerk authentication.
+- 📍 **Smart Route Matching** – Custom-built TSP-based algorithm to optimize multi-passenger pickups.
+- 🧭 **Real-Time Map Visualization** – Dynamic Leaflet.js integration with OpenStreetMap.
+- 💰 **Fair Cost Splitting** – Automatically calculate ride costs based on distance and split evenly using Stripe backend integration.
+- 🧑‍✈️ **Driver Dashboard** – Manage rides, view stats, and interact with riders.
+- 🔁 **Ride Animations & Visual Feedback** – Built-in UI animations for a smoother experience.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## 🛠️ Tech Stack
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+| Layer         | Technologies Used                                                                 |
+|---------------|-------------------------------------------------------------------------------------|
+| Frontend      | React, Tailwind CSS, TypeScript, Leaflet.js, OpenStreetMap                         |
+| Backend       | Supabase (Database & Auth), Stripe (Payments), Clerk (User Verification)           |
+| Deployment    | Vercel (Hosting), GoDaddy (Custom Domain)                                          |
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## 🧠 How It Works
+
+1. **User logs in** with their verified university email.
+2. **Inputs home address** and **departure time**.
+3. The app:
+   - Geocodes the location via OpenStreetMap.
+   - Matches the user with nearby riders.
+   - Optimizes pickup route using a pathfinding algorithm.
+   - Calculates and splits ride cost automatically.
+4. **Drivers** access a personalized dashboard with ride stats and upcoming trips.
+5. **Students communicate** safely via integrated contact options.
+
+---
+
+## 🚀 Getting Started (Local Setup)
+
+1. **Clone the repository**  
+   ```bash
+   git clone https://github.com/yourusername/vroomi.git
+   cd vroomi
