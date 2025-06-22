@@ -132,18 +132,18 @@ export default function Rider() {
     return { route, totalDistance: bestDistance, bestOrder };
   };
 
-  const getDistance = (point1: [number, number], point2: [number, number]) => {
-    const R = 6371; // km
-    const dLat = ((point2[0] - point1[0]) * Math.PI) / 180;
-    const dLon = ((point2[1] - point1[1]) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos((point1[0] * Math.PI) / 180) *
-        Math.cos((point2[0] * Math.PI) / 180) *
-        Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
+  // const getDistance = (point1: [number, number], point2: [number, number]) => {
+  //   const R = 6371; // km
+  //   const dLat = ((point2[0] - point1[0]) * Math.PI) / 180;
+  //   const dLon = ((point2[1] - point1[1]) * Math.PI) / 180;
+  //   const a =
+  //     Math.sin(dLat / 2) ** 2 +
+  //     Math.cos((point1[0] * Math.PI) / 180) *
+  //       Math.cos((point2[0] * Math.PI) / 180) *
+  //       Math.sin(dLon / 2) ** 2;
+  //   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  //   return R * c;
+  // };
 
   const generateMockStudents = (userCoords: [number, number]): StudentBase[] => {
     // Generate 3 other students in Toronto area
