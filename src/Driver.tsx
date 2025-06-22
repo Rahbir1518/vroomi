@@ -46,7 +46,7 @@ export default function Driver() {
   const [rides] = useState<Ride[]>([
     {
       id: '1',
-      date: '2025-06-22',
+      date: '2025-06-23',
       time: '08:30 AM',
       from: 'Downtown Campus',
       to: 'North Campus Library',
@@ -350,8 +350,142 @@ export default function Driver() {
           </nav>
 
           {activeTab === 'dashboard' && (
-            <div>
-              <p className="text-gray-700">This is the main dashboard view. Add charts or recent activity here.</p>
+            <div className="space-y-6">
+              {/* Recent Activity Section */}
+              <div className="bg-white rounded-lg p-6 shadow-sm border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                <div className="space-y-4">
+                  {rides.slice(0, 3).map((ride) => (
+                    <div key={ride.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${
+                          ride.status === 'completed' ? 'bg-green-500' : 
+                          ride.status === 'upcoming' ? 'bg-blue-500' : 'bg-gray-400'
+                        }`}></div>
+                        <div>
+                          <p className="font-medium text-gray-900">{ride.from} → {ride.to}</p>
+                          <p className="text-sm text-gray-500">{ride.date} at {ride.time}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-green-600">${ride.earnings}</p>
+                        <p className="text-xs text-gray-500 capitalize">{ride.status}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Performance Metrics */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Weekly Performance */}
+                <div className="bg-white rounded-lg p-6 shadow-sm border">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">This Week's Performance</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Rides Completed</span>
+                      <span className="font-semibold">8</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Total Earnings</span>
+                      <span className="font-semibold text-green-600">$96</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Average Rating</span>
+                      <span className="font-semibold">4.9 ⭐</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Distance Covered</span>
+                      <span className="font-semibold">47.2 miles</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Upcoming Schedule */}
+                <div className="bg-white rounded-lg p-6 shadow-sm border">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Schedule</h3>
+                  <div className="space-y-3">
+                    {upcomingRides.slice(0, 3).map((ride) => (
+                      <div key={ride.id} className="flex items-center space-x-3 p-2 border-l-4 border-blue-500 bg-blue-50 rounded">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900 text-sm">{ride.from}</p>
+                          <p className="text-xs text-gray-500">{ride.date} • {ride.time}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-blue-600">{ride.passengers}/{ride.maxPassengers}</p>
+                          <p className="text-xs text-gray-500">passengers</p>
+                        </div>
+                      </div>
+                    ))}
+                    {upcomingRides.length === 0 && (
+                      <p className="text-gray-500 text-sm italic">No upcoming rides scheduled</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly Progress */}
+              <div className="bg-white rounded-lg p-6 shadow-sm border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Progress</h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {/* Earnings Progress */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">Earnings Goal</span>
+                      <span className="text-sm font-medium">$127 / $200</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-green-600 h-2 rounded-full" style={{width: '63.5%'}}></div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">63.5% of monthly goal</p>
+                  </div>
+
+                  {/* Rides Progress */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">Rides Goal</span>
+                      <span className="text-sm font-medium">23 / 30</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-blue-600 h-2 rounded-full" style={{width: '76.7%'}}></div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">76.7% of monthly goal</p>
+                  </div>
+
+                  {/* Environmental Impact */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">CO₂ Reduction</span>
+                      <span className="text-sm font-medium">142 / 200 lbs</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-green-600 h-2 rounded-full" style={{width: '71%'}}></div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">71% of monthly goal</p>
+                  </div>
+                </div>
+              </div>
+
+
+              {/* Driver Tips */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-2">💡 Driver Tip of the Day</h4>
+                    <p className="text-gray-700 text-sm leading-relaxed">
+                      Keep your car clean and well-maintained to maintain high ratings. Passengers appreciate a comfortable, 
+                      clean ride environment. Consider offering phone chargers or water bottles for longer trips!
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
