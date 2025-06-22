@@ -455,7 +455,7 @@ export default function Rider() {
                       </div>
 
                       <a
-                        href={`sms:+16473283451?body=${encodeURIComponent(smsMessage)}`}
+                        href={`sms:+16475619466?body=${encodeURIComponent(smsMessage)}`}
                         className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-all duration-300 hover:scale-105"
                       >
                         Text Driver
