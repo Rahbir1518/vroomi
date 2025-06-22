@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useUser } from "@clerk/clerk-react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import { Car, MapPin, Clock, DollarSign, Users, Search, CheckCircle, AlertCircle } from "lucide-react";
 import L from "leaflet";
@@ -13,7 +14,6 @@ const DefaultIcon = L.icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
-
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Driver {
@@ -25,6 +25,8 @@ interface Driver {
 }
 
 export default function Rider() {
+  const { user } = useUser();
+
   const [departureTime, setDepartureTime] = useState("");
   const [homeAddress, setHomeAddress] = useState("");
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
@@ -48,7 +50,6 @@ export default function Rider() {
       setError("Please enter your home address");
       return;
     }
-
     if (!departureTime) {
       setError("Please select a departure time");
       return;
@@ -60,7 +61,9 @@ export default function Rider() {
     try {
       // Use OpenStreetMap Nominatim API for geocoding
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(homeAddress + ", Toronto, Ontario")}&limit=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          homeAddress + ", Toronto, Ontario"
+        )}&limit=1`
       );
       const data = await response.json();
 
@@ -70,7 +73,7 @@ export default function Rider() {
         setCoordinates([lat, lon]);
 
         // Simulate matching delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
         // Mock match with more realistic data
         const drivers = [
@@ -78,7 +81,7 @@ export default function Rider() {
           { name: "Michael Rodriguez", vehicle: "Toyota Corolla 2021", rating: 4.8, trips: 89 },
           { name: "Emily Zhang", vehicle: "Nissan Sentra 2023", rating: 5.0, trips: 64 },
         ];
-        
+
         const randomDriver = drivers[Math.floor(Math.random() * drivers.length)];
         setMatchedDriver({
           ...randomDriver,
@@ -117,6 +120,10 @@ export default function Rider() {
     setShowSuccess(false);
   };
 
+  // Prepare personalized SMS message
+  const userName = user?.firstName || user?.fullName || "I";
+  const smsMessage = `Hi, my name is ${userName}, I am interested in carpooling with you!`;
+
   return (
     <>
       <link
@@ -125,7 +132,7 @@ export default function Rider() {
         integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
         crossOrigin=""
       />
-      
+
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
         {/* Success Animation */}
         {showSuccess && (
@@ -143,9 +150,7 @@ export default function Rider() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 transform hover:scale-110 transition-transform duration-300">
               <Car className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">
-              Vroomi
-            </h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">Vroomi</h1>
             <p className="text-gray-600">Connect peers for affordable rides</p>
           </div>
 
@@ -213,7 +218,7 @@ export default function Rider() {
                       </>
                     )}
                   </button>
-                  
+
                   {matchedDriver && (
                     <button
                       onClick={resetForm}
@@ -232,7 +237,7 @@ export default function Rider() {
                     <CheckCircle className="w-6 h-6 text-green-600" />
                     <h3 className="text-xl font-semibold text-gray-800">Perfect Match Found!</h3>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
@@ -240,21 +245,21 @@ export default function Rider() {
                         <span className="text-sm text-gray-600">Driver:</span>
                         <span className="font-semibold">{matchedDriver.name}</span>
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         <Car className="w-4 h-4 text-purple-500" />
                         <span className="text-sm text-gray-600">Vehicle:</span>
                         <span className="font-semibold">{matchedDriver.vehicle}</span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
                         <Clock className="w-4 h-4 text-orange-500" />
                         <span className="text-sm text-gray-600">Departure:</span>
                         <span className="font-semibold">{matchedDriver.departure}</span>
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         <DollarSign className="w-4 h-4 text-green-500" />
                         <span className="text-sm text-gray-600">Cost:</span>
@@ -267,15 +272,18 @@ export default function Rider() {
                     <div className="flex items-center space-x-1">
                       <span className="text-sm text-gray-600">Rating:</span>
                       <div className="flex text-yellow-400">
-                        {'★'.repeat(Math.floor(matchedDriver.rating))}
+                        {"★".repeat(Math.floor(matchedDriver.rating))}
                       </div>
                       <span className="text-sm font-semibold">{matchedDriver.rating}</span>
                       <span className="text-xs text-gray-500">({matchedDriver.trips} trips)</span>
                     </div>
-                    
-                    <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transform transition-all duration-300 hover:scale-105">
-                      Contact Driver
-                    </button>
+
+                    <a
+                      href={`sms:+16473283451?body=${encodeURIComponent(smsMessage)}`}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-all duration-300 hover:scale-105"
+                    >
+                      Text Driver
+                    </a>
                   </div>
                 </div>
               )}
@@ -289,12 +297,12 @@ export default function Rider() {
                   <h3 className="text-xl font-semibold">Route Map</h3>
                 </div>
               </div>
-              
+
               <div className="h-96">
                 {coordinates ? (
-                  <MapContainer 
-                    center={yorkCoords} 
-                    zoom={11} 
+                  <MapContainer
+                    center={yorkCoords}
+                    zoom={11}
                     style={{ height: "100%", width: "100%" }}
                     className="z-0"
                   >
@@ -318,9 +326,9 @@ export default function Rider() {
                         </div>
                       </Popup>
                     </Marker>
-                    <Polyline 
-                      positions={[coordinates, yorkCoords]} 
-                      color="#3B82F6" 
+                    <Polyline
+                      positions={[coordinates, yorkCoords]}
+                      color="#3B82F6"
                       weight={4}
                       opacity={0.8}
                       dashArray="10, 10"
@@ -346,7 +354,10 @@ export default function Rider() {
               { icon: Car, title: "Rides Completed", value: "15,623", color: "text-green-500" },
               { icon: DollarSign, title: "Money Saved", value: "$432", color: "text-purple-500" }
             ].map((stat, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
+              <div
+                key={index}
+                className="bg-white rounded-xl p-6 shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-xl"
+              >
                 <div className="flex items-center space-x-3">
                   <div className={`p-3 rounded-full bg-gray-100`}>
                     <stat.icon className={`w-6 h-6 ${stat.color}`} />
