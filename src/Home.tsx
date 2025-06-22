@@ -264,6 +264,62 @@ export default function Home() {
           </div> 
         </div> 
 
+        {/* Floating Mascot Chatbot */}
+        <div className="fixed bottom-6 right-6 z-50 animate-bounce-gentle">
+          <div className="relative group">
+            <div className="w-16 h-16 bg-white rounded-full shadow-xl cursor-pointer transform transition-all duration-300 hover:scale-110 hover:shadow-2xl flex items-center justify-center border-4 border-green-200 hover:border-green-300">
+              <svg className="w-12 h-12" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Mascot Body */}
+                <ellipse cx="50" cy="70" rx="25" ry="20" fill="#4ADE80" stroke="#166534" strokeWidth="2"/>
+                
+                {/* Mascot Head/Onion */}
+                <path d="M50 20 C35 20, 25 35, 25 50 C25 65, 35 70, 50 70 C65 70, 75 65, 75 50 C75 35, 65 20, 50 20 Z" fill="#86EFAC" stroke="#166534" strokeWidth="2"/>
+                
+                {/* Onion Lines */}
+                <path d="M35 45 Q50 40, 65 45" stroke="#4ADE80" strokeWidth="1.5" fill="none"/>
+                <path d="M30 55 Q50 50, 70 55" stroke="#4ADE80" strokeWidth="1.5" fill="none"/>
+                
+                {/* Green Shoots/Leaves */}
+                <path d="M45 20 Q40 5, 35 15 Q45 10, 45 20" fill="#166534"/>
+                <path d="M50 18 Q50 3, 45 13 Q50 8, 50 18" fill="#22C55E"/>
+                <path d="M55 20 Q60 5, 65 15 Q55 10, 55 20" fill="#166534"/>
+                
+                {/* Eyes */}
+                <circle cx="42" cy="45" r="4" fill="#166534"/>
+                <circle cx="58" cy="45" r="4" fill="#166534"/>
+                <circle cx="43" cy="43" r="1.5" fill="white"/>
+                <circle cx="59" cy="43" r="1.5" fill="white"/>
+                
+                {/* Smile */}
+                <path d="M45 55 Q50 60, 55 55" stroke="#166534" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                
+                {/* Cheeks */}
+                <circle cx="35" cy="52" r="3" fill="#FCA5A5" opacity="0.7"/>
+                <circle cx="65" cy="52" r="3" fill="#FCA5A5" opacity="0.7"/>
+                
+                {/* Arms */}
+                <ellipse cx="25" cy="60" rx="8" ry="4" fill="#4ADE80" stroke="#166534" strokeWidth="1.5" transform="rotate(-20 25 60)"/>
+                <ellipse cx="75" cy="60" rx="8" ry="4" fill="#4ADE80" stroke="#166534" strokeWidth="1.5" transform="rotate(20 75 60)"/>
+                
+                {/* Legs */}
+                <ellipse cx="42" cy="85" rx="4" ry="8" fill="#4ADE80" stroke="#166534" strokeWidth="1.5"/>
+                <ellipse cx="58" cy="85" rx="4" ry="8" fill="#4ADE80" stroke="#166534" strokeWidth="1.5"/>
+              </svg>
+            </div>
+            
+            {/* Tooltip */}
+            <div className="absolute bottom-20 right-0 bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 pointer-events-none whitespace-nowrap">
+              <div className="text-sm font-medium">Hey! I'm Vroomi! 🌱</div>
+              <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-white/90"></div>
+            </div>
+            
+            {/* Notification Badge */}
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
+              <div className="w-2 h-2 bg-white rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
         {/* CTA Section */}
         <div className={`text-center transition-all duration-1000 delay-1100 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
           <h2 className="text-3xl font-bold text-gray-900 mb-8 bg-gradient-to-r from-gray-900 to-tertiary bg-clip-text text-transparent">Ready to Start Sharing?</h2>
@@ -309,50 +365,86 @@ export default function Home() {
         </div>
       </main>
 
-      <style>
+     <style>
         {`
         @keyframes gradient-x {
           0%, 100% { background-size: 200% 200%; background-position: left center; }
           50% { background-size: 200% 200%; background-position: right center; }
         }
-        
+
         @keyframes shimmer {
           0% { transform: translateX(-100%) skewX(-12deg); }
           100% { transform: translateX(200%) skewX(-12deg); }
         }
-        
+
         @keyframes bounce-gentle {
           0%, 100% { transform: translateY(0) scale(1); }
           50% { transform: translateY(-5px) scale(1.02); }
         }
-        
+
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        
+
         @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+          0% {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        
-        @keyframes count-up {
-          from { transform: scale(0.8); opacity: 0; }
-          to { transform: scale(1); opacity: 1; }
+
+        .animate-gradient-x {
+          animation: gradient-x 5s ease infinite;
         }
-        
-        .animate-gradient-x { animation: gradient-x 3s ease infinite; }
-        .animate-shimmer { animation: shimmer 2s infinite; }
-        .animate-bounce-gentle { animation: bounce-gentle 2s ease-in-out infinite; }
-        .animate-fade-in { animation: fade-in 1s ease-out; }
-        .animate-fade-in-up { animation: fade-in-up 1s ease-out; }
-        .animate-count-up { animation: count-up 1s ease-out; }
-        
-        .animation-delay-200 { animation-delay: 200ms; }
-        .animation-delay-400 { animation-delay: 400ms; }
-        .animation-delay-1000 { animation-delay: 1000ms; }
-        .animation-delay-2000 { animation-delay: 2000ms; }
-        .animation-delay-4000 { animation-delay: 4000ms; }
+
+        .animate-shimmer {
+          animation: shimmer 2s linear infinite;
+        }
+
+        .animate-bounce-gentle {
+          animation: bounce-gentle 3s ease-in-out infinite;
+        }
+
+        .animate-fade-in {
+          animation: fade-in 1s ease forwards;
+        }
+
+        .animate-fade-in-up {
+          animation: fade-in-up 1s ease forwards;
+        }
+
+        .animation-delay-200 {
+          animation-delay: 200ms;
+        }
+
+        .animation-delay-400 {
+          animation-delay: 400ms;
+        }
+
+        .animation-delay-500 {
+          animation-delay: 500ms;
+        }
+
+        .animation-delay-700 {
+          animation-delay: 700ms;
+        }
+
+        .animation-delay-900 {
+          animation-delay: 900ms;
+        }
+
+        .animation-delay-1000 {
+          animation-delay: 1000ms;
+        }
+
+        .animation-delay-1100 {
+          animation-delay: 1100ms;
+        }
         `}
       </style>
     </div>
