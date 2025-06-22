@@ -206,6 +206,22 @@ export default function Driver() {
     }
   };
 
+  const handleDelete = async (index: number) => {
+    const car = cars[index];
+
+    const {error} = await supabase
+      .from("cars")
+      .delete()
+      .eq("id", car.id);
+    if (error) {
+      alert("Failed to Delete car.");
+      console.error(error);
+    } else {
+      alert("Car deleted successfully.");
+      setCars(cars.filter((_,i) => i !== index));
+    }  
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
@@ -611,12 +627,12 @@ export default function Driver() {
                                 COMPLETED
                               </span>
                               <span className="text-sm text-gray-500">{ride.date} at {ride.time}</span>
-                              {ride.rating && (
+                              {/* {ride.rating && (
                                 <div className="flex items-center space-x-1">
                                   {renderStars(Math.floor(ride.rating))}
                                   <span className="text-sm text-gray-600 ml-1">{ride.rating}</span>
                                 </div>
-                              )}
+                              )} */}
                             </div>
                             <div className="space-y-2">
                               <div className="flex items-center space-x-2">
