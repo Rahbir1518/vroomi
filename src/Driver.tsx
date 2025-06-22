@@ -103,6 +103,23 @@ export default function Driver() {
     }
   };
 
+  const handleDelete = async (index: number) => {
+    const car = cars[index];
+
+    const { error } = await supabase
+      .from("cars")
+      .delete()
+      .eq("id", car.id);
+    
+    if (error) {
+      alert("Failed to delete the car.");
+      console.error(error);
+    } else {
+      alert("Car deleted successfully.");
+      setCars(cars.filter((_, i) => i !== index));
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
@@ -288,12 +305,34 @@ export default function Driver() {
                       onChange={(e) => handleInputChange(index, 'seats', parseInt(e.target.value) || 0)}
                     />
                   </div>
-                  <button
-                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    onClick={() => handleUpdate(index)}
-                  >
-                    Save Changes
-                  </button>
+                  <div className="flex items-center gap-4">
+                    <button
+                      className="mt-2 px-4 mr-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 hover:cursor-pointer"
+                      onClick={() => handleUpdate(index)}
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      className="mt-2 p-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center justify-center hover:cursor-pointer"
+                      onClick={() => handleDelete(index)}
+                      title="Delete car"
+                    >
+                      <svg 
+                        className="w-5 h-5" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" 
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  
                 </div>
               ))}
             </div>
