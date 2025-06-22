@@ -261,14 +261,34 @@ export default function Rider() {
         )}
 
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8 transform transition-all duration-700 ease-out">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 transform hover:scale-110 transition-transform duration-300">
-              <Car className="w-8 h-8 text-blue-600" />
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-8 px-4">
+              <a
+                href="https://buy.stripe.com/test_fZufZj4Ig7wZcbZcTucIE01"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-500 transition-all"
+              >
+                Pay Now
+              </a>
+
+              {/* Center: Car icon and title */}
+              <div className="flex flex-col items-center flex-1 text-center">
+                 <Link to="/" className="mb-2 flex items-center justify-center">
+                  <img
+                    src={logo} alt="Vroomi" 
+                    className="w-35 md:w-37 h-15 object-cover"
+                    />
+                </Link>
+                {/* <h1 className="text-4xl font-bold text-gray-800 mb-1">Vroomi</h1> */}
+                <p className="text-gray-600">Smart 4-student carpooling with optimized routes</p>
+              </div>
+
+              {/* Right: Empty spacer (for symmetry) */}
+              <div className="w-[120px]"></div>
             </div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Vroomi</h1>
-            <p className="text-gray-600">Smart 4-student carpooling with optimized routes</p>
           </div>
+
 
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Form Section */}
@@ -320,7 +340,7 @@ export default function Rider() {
                   <button
                     onClick={handleMatch}
                     disabled={isLoading}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-semibold transform transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-6 rounded-lg font-semibold transform transition-all duration-300 hover:from-green-700 hover:to-green-800 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
                   >
                     {isLoading ? (
                       <>
@@ -459,7 +479,7 @@ export default function Rider() {
 
             {/* Map Section */}
             <div className="bg-white shadow-xl rounded-xl overflow-hidden transform transition-all duration-500 hover:shadow-2xl">
-              <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+              <div className="p-6 bg-gradient-to-r from-green-600 to-tertiary/60 text-white">
                 <div className="flex items-center space-x-2">
                   <Route className="w-6 h-6" />
                   <h3 className="text-xl font-semibold">Optimized Route Map</h3>
@@ -567,8 +587,8 @@ export default function Rider() {
           {/* Enhanced Stats Section */}
           <div className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { icon: Users, title: "Active Students", value: "2,847", color: "text-blue-500" },
-              { icon: Car, title: "4-Student Rides", value: "3,906", color: "text-green-500" },
+              { icon: Users, title: "Active Students", value: "25", color: "text-blue-500" },
+              { icon: Car, title: "4-Student Rides", value: "12", color: "text-green-500" },
               { icon: DollarSign, title: "Avg. Cost/Student", value: "$8.50", color: "text-purple-500" },
               { icon: Route, title: "Avg. Route Time", value: "35 min", color: "text-orange-500" }
             ].map((stat, index) => (
