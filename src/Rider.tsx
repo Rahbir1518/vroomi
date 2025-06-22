@@ -5,6 +5,7 @@ import { Car, MapPin, Clock, DollarSign, Users, Search, CheckCircle, AlertCircle
 import L from "leaflet";
 import { Link } from "react-router-dom";
 import logo from "../image/logo1.png"
+
 // Fix Leaflet default markers - Modern approach
 const DefaultIcon = L.icon({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
@@ -49,6 +50,14 @@ interface Driver {
   routeCoordinates: [number, number][];
 }
 
+// Create a separate interface for students before route optimization
+interface StudentBase {
+  id: number;
+  name: string;
+  address: string;
+  coordinates: [number, number];
+}
+
 export default function Rider() {
   const { user } = useUser();
 
@@ -71,35 +80,56 @@ export default function Rider() {
   }, [showSuccess]);
 
   // Calculate optimal route using nearest neighbor algorithm
-  const calculateOptimalRoute = (studentCoords: [number, number][], startPoint: [number, number]) => {
-    const unvisited = [...studentCoords];
-    const route = [startPoint];
-    let currentPoint = startPoint;
-    let totalDistance = 0;
+  const calculateOptimalRoute = (students: StudentBase[], startPoint: [number, number], destination: [number, number]) => {
+    const getDistance = (p1: [number, number], p2: [number, number]) => {
+      const R = 6371;
+      const dLat = ((p2[0] - p1[0]) * Math.PI) / 180;
+      const dLon = ((p2[1] - p1[1]) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos((p1[0] * Math.PI) / 180) *
+        Math.cos((p2[0] * Math.PI) / 180) *
+        Math.sin(dLon / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
 
-    while (unvisited.length > 0) {
-      let nearestIndex = 0;
-      let nearestDistance = getDistance(currentPoint, unvisited[0]);
+    const calculateRouteDistance = (start: [number, number], order: StudentBase[], end: [number, number]) => {
+      let dist = getDistance(start, order[0].coordinates);
+      for (let i = 0; i < order.length - 1; i++) {
+        dist += getDistance(order[i].coordinates, order[i + 1].coordinates);
+      }
+      dist += getDistance(order[order.length - 1].coordinates, end);
+      return dist;
+    };
 
-      for (let i = 1; i < unvisited.length; i++) {
-        const distance = getDistance(currentPoint, unvisited[i]);
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestIndex = i;
+    const generatePermutations = (arr: StudentBase[]): StudentBase[][] => {
+      if (arr.length <= 1) return [arr];
+      const result: StudentBase[][] = [];
+      for (let i = 0; i < arr.length; i++) {
+        const current = arr[i];
+        const remaining = [...arr.slice(0, i), ...arr.slice(i + 1)];
+        for (const perm of generatePermutations(remaining)) {
+          result.push([current, ...perm]);
         }
       }
+      return result;
+    };
 
-      currentPoint = unvisited[nearestIndex];
-      route.push(currentPoint);
-      totalDistance += nearestDistance;
-      unvisited.splice(nearestIndex, 1);
+    const permutations = generatePermutations(students);
+    let bestOrder = permutations[0];
+    let bestDistance = Infinity;
+
+    for (const order of permutations) {
+      const distance = calculateRouteDistance(startPoint, order, destination);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestOrder = order;
+      }
     }
 
-    // Add final distance to York University
-    totalDistance += getDistance(currentPoint, yorkCoords);
-    route.push(yorkCoords);
-
-    return { route, totalDistance };
+    const route = [startPoint, ...bestOrder.map(s => s.coordinates), destination];
+    return { route, totalDistance: bestDistance, bestOrder };
   };
 
   const getDistance = (point1: [number, number], point2: [number, number]) => {
@@ -115,16 +145,29 @@ export default function Rider() {
     return R * c;
   };
 
-  const generateMockStudents = (userCoords: [number, number]) => {
+  const generateMockStudents = (userCoords: [number, number]): StudentBase[] => {
     // Generate 3 other students in Toronto area
     const mockAddresses = [
-      { name: "Alex Kim", address: "2300 Yonge St, Toronto", coords: [43.7090, -79.3958] as [number, number] },
-      { name: "Maria Santos", address: "1500 Keele St, Toronto", coords: [43.7280, -79.4770] as [number, number] },
-      { name: "David Chen", address: "3000 Dufferin St, Toronto", coords: [43.7489, -79.4402] as [number, number] }
-    ];
+  {
+    name: "Alex Kim",
+    address: "15 Elana Dr, North York, ON M3N 2E7", // Zig East
+    coords: [43.7624, -79.4381] as [number, number]
+  },
+  {
+    name: "David Chen",
+    address: "270 Wilmington Ave, North York, ON M3H 5J9", // Zag West
+    coords: [43.7520, -79.4578] as [number, number]
+  },
+  {
+    name: "Maria Santos",
+    address: "88 Grandravine Dr, North York, ON M3J 1B2", // Zig East again
+    coords: [43.7525, -79.4315] as [number, number]
+  }
+];
 
+    
     const userName = user?.firstName || "You";
-    const allStudents = [
+    const allStudents: StudentBase[] = [
       { id: 1, name: userName, address: "Your Address", coordinates: userCoords },
       ...mockAddresses.map((addr, index) => ({
         id: index + 2,
@@ -170,32 +213,27 @@ export default function Rider() {
 
         // Generate students and calculate optimal route
         const allStudents = generateMockStudents(userCoords);
-        const studentCoords = allStudents.map(s => s.coordinates);
         
         // Calculate optimal route starting from a central point
         const centralPoint: [number, number] = [43.7280, -79.4500]; // Central Toronto
-        const { route, totalDistance } = calculateOptimalRoute(studentCoords, centralPoint);
+        const { route, totalDistance, bestOrder } = calculateOptimalRoute(allStudents, centralPoint, yorkCoords);
 
         // Assign pickup order based on optimal route
-        const studentsWithOrder = allStudents.map(student => {
-          const orderIndex = route.findIndex(point => 
-            Math.abs(point[0] - student.coordinates[0]) < 0.001 && 
-            Math.abs(point[1] - student.coordinates[1]) < 0.001
-          );
-          
+        const studentsWithOrder: Student[] = bestOrder.map((student, index) => {
           const baseTime = new Date(`2024-01-01 ${departureTime}`);
-          const pickupTime = new Date(baseTime.getTime() + (orderIndex * 8 * 60000)); // 8 minutes between pickups
+          const pickupTime = new Date(baseTime.getTime() + (index * 8 * 60000));
           
           return {
             ...student,
-            pickupOrder: orderIndex,
+            pickupOrder: index,
             estimatedTime: pickupTime.toLocaleTimeString('en-US', { 
               hour: '2-digit', 
               minute: '2-digit', 
               hour12: false 
             })
           };
-        }).sort((a, b) => a.pickupOrder - b.pickupOrder);
+        });
+
 
         // Mock driver data
         const drivers = [
