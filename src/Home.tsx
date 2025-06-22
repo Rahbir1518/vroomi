@@ -69,10 +69,10 @@ export default function Home() {
   ];
 
   const teamMembers = [
-    { name: "Md Rahbir Mahdi", role: "Cs @ YorkU", img: rahbir, github: "https://github.com/Rahbir1518", linkedin: "https://www.linkedin.com/in/rahbirmahdi/" },
-    { name: "Mohammed Faraz Kabbo ", role: "Cs @ YorkU", img: faraz, github: "https://github.com/farazkabbo", linkedin: "https://www.linkedin.com/in/mohammed-faraz-kabbo/" },
+    { name: "Md Rahbir Mahdi", role: "CS @ YorkU", img: rahbir, github: "https://github.com/Rahbir1518", linkedin: "https://www.linkedin.com/in/rahbirmahdi/" },
+    { name: "Mohammed Faraz Kabbo ", role: "CS @ YorkU", img: faraz, github: "https://github.com/farazkabbo", linkedin: "https://www.linkedin.com/in/mohammed-faraz-kabbo/" },
     { name: "Reymond Shen", role: "ECE @ UBC", img: reymond, github: "https://github.com/rayleishen", linkedin: "https://www.linkedin.com/in/rayleishen/"},
-    { name: "Hamza Panwala", role: "Cs @ YorkU", img: hamza, github: "https://github.com/Hamzap01", linkedin: "https://www.linkedin.com/in/hamza-panwala-1bbaba288/" },
+    { name: "Hamza Panwala", role: "CS @ YorkU", img: hamza, github: "https://github.com/Hamzap01", linkedin: "https://www.linkedin.com/in/hamza-panwala-1bbaba288/" },
   ];
 
   return (
