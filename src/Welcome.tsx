@@ -30,17 +30,17 @@ export default function Welcome() {
       </div>
 
       {/* Main Content */}
-      <div className="mt-22 z-20 text-center animate-fade-in">
-        <h1 className="text-6xl md:text-8xl font-extrabold text-white drop-shadow-2xl mb-4 animate-slide-up">
+      <div className="mt-22 z-20 text-center animate-slide-up">
+        <h1 className="text-6xl md:text-8xl font-extrabold text-white drop-shadow-2xl mb-4">
           Welcome to York
         </h1>
-        <p className="text-lg md:text-2xl text-white/90 italic mt-2 animate-slide-up animation-delay-200">
+        <p className="text-lg md:text-2xl text-white/90 italic mt-2 animate-slide-up-delay-200">
           Share rides. Save costs. Connect with your community.
         </p>
       </div>
 
       {/* Main Content Section */}
-      <div className="mt-12 flex flex-col md:flex-row items-center justify-center gap-8 z-20 w-full max-w-6xl animate-fade-in animation-delay-400">
+      <div className="mt-12 flex flex-col md:flex-row items-center justify-center gap-8 z-20 w-full max-w-6xl animate-fade-in-delay-400">
         {/* Logo Section */}
         <div className="flex-1 flex justify-center">
           <img 
@@ -53,7 +53,7 @@ export default function Welcome() {
         {/* Info Cards */}
         <div className="flex-1 space-y-6 w-full max-w-md">
           {/* Portal Card */}
-          <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-6 rounded-xl shadow-xl text-white transform hover:scale-105 transition-all duration-300 animate-slide-up animation-delay-600">
+          <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-6 rounded-xl shadow-xl text-white transform hover:scale-105 transition-all duration-300 animate-slide-up-delay-600">
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,7 +95,7 @@ export default function Welcome() {
 
           {/* User Profile Card */}
           {user && (
-            <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-6 rounded-xl shadow-xl text-white transform hover:scale-105 transition-all duration-300 animate-slide-up animation-delay-800">
+            <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-6 rounded-xl shadow-xl text-white transform hover:scale-105 transition-all duration-300 animate-slide-up-delay-800">
               <div className="flex items-center mb-4">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,14 +136,12 @@ export default function Welcome() {
       </div>
 
       {/* Footer */}
-      {/* Footer */}
-      <footer className="m-12 text-white/80 text-xs z-20 flex items-center justify-center animate-fade-in animation-delay-1000">
+      <footer className="m-12 text-white/80 text-xs z-20 flex items-center justify-center animate-fade-in-delay-1000">
         <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
         </svg>
         &copy; {new Date().getFullYear()} York University Hackathon Team
       </footer>
-
 
       {/* Enhanced Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-black/60 z-0" />
@@ -175,32 +173,38 @@ export default function Welcome() {
           animation: float 3s ease-in-out infinite;
         }
         
-        .animate-fade-in {
-          animation: fade-in 1s ease-out forwards;
+        .animate-fade-in-delay-400 {
+          opacity: 0;
+          animation: fade-in 1s ease-out 0.4s forwards;
+        }
+        
+        .animate-fade-in-delay-1000 {
+          opacity: 0;
+          animation: fade-in 1s ease-out 1s forwards;
         }
         
         .animate-slide-up {
+          opacity: 0;
+          transform: translateY(30px);
           animation: slide-up 0.8s ease-out forwards;
         }
         
-        .animation-delay-200 {
-          animation-delay: 0.2s;
+        .animate-slide-up-delay-200 {
+          opacity: 0;
+          transform: translateY(30px);
+          animation: slide-up 0.8s ease-out 0.2s forwards;
         }
         
-        .animation-delay-400 {
-          animation-delay: 0.4s;
+        .animate-slide-up-delay-600 {
+          opacity: 0;
+          transform: translateY(30px);
+          animation: slide-up 0.8s ease-out 0.6s forwards;
         }
         
-        .animation-delay-600 {
-          animation-delay: 0.6s;
-        }
-        
-        .animation-delay-800 {
-          animation-delay: 0.8s;
-        }
-        
-        .animation-delay-1000 {
-          animation-delay: 1s;
+        .animate-slide-up-delay-800 {
+          opacity: 0;
+          transform: translateY(30px);
+          animation: slide-up 0.8s ease-out 0.8s forwards;
         }
       `}</style>
     </div>
