@@ -206,14 +206,6 @@ export default function Driver() {
     }
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={i < rating ? "text-yellow-400" : "text-gray-300"}>
-        ⭐
-      </span>
-    ));
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
@@ -721,12 +713,39 @@ export default function Driver() {
                       onChange={(e) => handleInputChange(index, 'seats', parseInt(e.target.value) || 0)}
                     />
                   </div>
-                  <button
-                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    onClick={() => handleUpdate(index)}
-                  >
+                  <div className="flex items-center gap-3 mt-4">
+                    <button
+                      className="group relative px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl hover:from-emerald-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                   onClick={() => handleUpdate(index)}
+                    >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
                     Save Changes
-                  </button>
+                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity duration-200"></div>
+                     </button>
+                    <button
+                       className="group relative p-3 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-lg shadow-lg hover:shadow-xl hover:from-rose-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200"
+                        onClick={() => handleDelete(index)}
+                      title="Delete car"
+                    >
+                      <svg 
+                        className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" 
+                        />
+                      </svg>
+                      <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity duration-200"></div>
+                              </button>
+                  </div>
+                  
                 </div>
               ))}
             </div>

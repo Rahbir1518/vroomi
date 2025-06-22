@@ -15,18 +15,6 @@ const DefaultIcon = L.icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
-
-// Custom icons for different students
-const createNumberedIcon = (number: number, color: string) => {
-  return L.divIcon({
-    html: `<div style="background: ${color}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${number}</div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15],
-    className: 'custom-numbered-icon'
-  });
-};
-
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Student {
@@ -166,7 +154,7 @@ export default function Rider() {
         setCoordinates(userCoords);
 
         // Simulate matching delay for better UX
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
         // Generate students and calculate optimal route
         const allStudents = generateMockStudents(userCoords);
@@ -238,7 +226,7 @@ export default function Rider() {
 
   // Prepare personalized SMS message
   const userName = user?.firstName || user?.fullName || "I";
-  const smsMessage = `Hi, my name is ${userName}, I am interested in carpooling with you for the ${departureTime} departure!`;
+  const smsMessage = `Hi, my name is ${userName}, I am interested in carpooling with you!`;
 
   return (
     <>
@@ -273,8 +261,8 @@ export default function Rider() {
             {/* <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 transform hover:scale-110 transition-transform duration-300">
               <Car className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Vroomi</h1> */}
-            <p className="text-gray-600">Smart 4-student carpooling with optimized routes</p>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">Vroomi</h1>
+            <p className="text-gray-600">Connect peers for affordable rides</p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
@@ -355,110 +343,58 @@ export default function Rider() {
 
               {/* Match Results */}
               {matchedDriver && coordinates && (
-                <div className="mt-8 space-y-6">
-                  {/* Driver Info */}
-                  <div className="p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200 transform transition-all duration-700 ease-out">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                      <h3 className="text-xl font-semibold text-gray-800">Carpool Group Matched!</h3>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
-                          <User className="w-4 h-4 text-blue-500" />
-                          <span className="text-sm text-gray-600">Driver:</span>
-                          <span className="font-semibold">{matchedDriver.name}</span>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Car className="w-4 h-4 text-purple-500" />
-                          <span className="text-sm text-gray-600">Vehicle:</span>
-                          <span className="font-semibold">{matchedDriver.vehicle}</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
-                          <Clock className="w-4 h-4 text-orange-500" />
-                          <span className="text-sm text-gray-600">Departure:</span>
-                          <span className="font-semibold">{matchedDriver.departure}</span>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <DollarSign className="w-4 h-4 text-green-500" />
-                          <span className="text-sm text-gray-600">Your Cost:</span>
-                          <span className="font-semibold text-green-600">${estimatedCost?.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between">
-                      <div className="flex items-center space-x-1">
-                        <span className="text-sm text-gray-600">Rating:</span>
-                        <div className="flex text-yellow-400">
-                          {"★".repeat(Math.floor(matchedDriver.rating))}
-                        </div>
-                        <span className="text-sm font-semibold">{matchedDriver.rating}</span>
-                        <span className="text-xs text-gray-500">({matchedDriver.trips} trips)</span>
-                      </div>
-
-                      <a
-                        href={`sms:+16473283451?body=${encodeURIComponent(smsMessage)}`}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-all duration-300 hover:scale-105"
-                      >
-                        Text Driver
-                      </a>
-                    </div>
+                <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200 transform transition-all duration-700 ease-out animate-pulse">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                    <h3 className="text-xl font-semibold text-gray-800">Perfect Match Found!</h3>
                   </div>
 
-                  {/* Students List */}
-                  <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-lg">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Route className="w-5 h-5 text-blue-600" />
-                      <h4 className="text-lg font-semibold text-gray-800">Pickup Schedule</h4>
-                      <span className="text-sm text-gray-500">({matchedDriver.totalDistance.toFixed(1)} km total)</span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm text-gray-600">Driver:</span>
+                        <span className="font-semibold">{matchedDriver.name}</span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Car className="w-4 h-4 text-purple-500" />
+                        <span className="text-sm text-gray-600">Vehicle:</span>
+                        <span className="font-semibold">{matchedDriver.vehicle}</span>
+                      </div>
                     </div>
 
                     <div className="space-y-3">
-                      {matchedDriver.students.map((student, index) => (
-                        <div key={student.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                            index === 0 ? 'bg-blue-500' : index === 1 ? 'bg-green-500' : index === 2 ? 'bg-purple-500' : 'bg-orange-500'
-                          }`}>
-                            {index + 1}
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-semibold text-gray-800">{student.name}</div>
-                            <div className="text-sm text-gray-600">{student.address}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-semibold text-blue-600">{student.estimatedTime}</div>
-                            <div className="text-xs text-gray-500">Pickup #{student.pickupOrder + 1}</div>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                          🎓
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-800">York University</div>
-                          <div className="text-sm text-gray-600">Final Destination</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-blue-600">
-                            {(() => {
-                              const lastPickup = new Date(`2024-01-01 ${matchedDriver.students[matchedDriver.students.length - 1]?.estimatedTime}`);
-                              const arrivalTime = new Date(lastPickup.getTime() + (25 * 60000)); // 25 min to campus
-                              return arrivalTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-                            })()}
-                          </div>
-                          <div className="text-xs text-gray-500">Est. Arrival</div>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4 text-orange-500" />
+                        <span className="text-sm text-gray-600">Departure:</span>
+                        <span className="font-semibold">{matchedDriver.departure}</span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <DollarSign className="w-4 h-4 text-green-500" />
+                        <span className="text-sm text-gray-600">Cost:</span>
+                        <span className="font-semibold text-green-600">${estimatedCost?.toFixed(2)}</span>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm text-gray-600">Rating:</span>
+                      <div className="flex text-yellow-400">
+                        {"★".repeat(Math.floor(matchedDriver.rating))}
+                      </div>
+                      <span className="text-sm font-semibold">{matchedDriver.rating}</span>
+                      <span className="text-xs text-gray-500">({matchedDriver.trips} trips)</span>
+                    </div>
+
+                    <a
+                      href={`sms:+16473283451?body=${encodeURIComponent(smsMessage)}`}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-all duration-300 hover:scale-105"
+                    >
+                      Text Driver
+                    </a>
                   </div>
                 </div>
               )}
@@ -479,58 +415,7 @@ export default function Rider() {
               </div>
 
               <div className="h-96">
-                {matchedDriver && coordinates ? (
-                  <MapContainer
-                    center={yorkCoords}
-                    zoom={10}
-                    style={{ height: "100%", width: "100%" }}
-                    className="z-0"
-                  >
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    />
-                    
-                    {/* Student markers */}
-                    {matchedDriver.students.map((student, index) => (
-                      <Marker 
-                        key={student.id} 
-                        position={student.coordinates}
-                        icon={createNumberedIcon(index + 1, 
-                          index === 0 ? '#3B82F6' : index === 1 ? '#10B981' : index === 2 ? '#8B5CF6' : '#F59E0B'
-                        )}
-                      >
-                        <Popup>
-                          <div className="text-center">
-                            <strong>Pickup #{index + 1}</strong><br/>
-                            <strong>{student.name}</strong><br/>
-                            <span className="text-sm text-gray-600">{student.estimatedTime}</span>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    ))}
-                    
-                    {/* York University marker */}
-                    <Marker position={yorkCoords}>
-                      <Popup>
-                        <div className="text-center">
-                          <div className="text-lg mb-1">🎓</div>
-                          <strong>York University</strong><br/>
-                          <span className="text-sm text-gray-600">Final Destination</span>
-                        </div>
-                      </Popup>
-                    </Marker>
-                    
-                    {/* Optimal route polyline */}
-                    <Polyline
-                      positions={matchedDriver.routeCoordinates}
-                      color="#3B82F6"
-                      weight={4}
-                      opacity={0.8}
-                      dashArray="5, 10"
-                    />
-                  </MapContainer>
-                ) : coordinates ? (
+                {coordinates ? (
                   <MapContainer
                     center={yorkCoords}
                     zoom={11}
@@ -557,6 +442,13 @@ export default function Rider() {
                         </div>
                       </Popup>
                     </Marker>
+                    <Polyline
+                      positions={[coordinates, yorkCoords]}
+                      color="#3B82F6"
+                      weight={4}
+                      opacity={0.8}
+                      dashArray="10, 10"
+                    />
                   </MapContainer>
                 ) : (
                   <div className="h-full flex items-center justify-center bg-gray-50">
