@@ -5,7 +5,7 @@ import logo from "../image/logo1.png"
 import rahbir from "../image/rahbir.jpg";
 import faraz from "../image/Faraz.jpg";
 import hamza from "../image/hamzap.jpg";
-import reymond from "../image/reymond.jpg";
+import raymond from "../image/reymond.jpg";
 
 export default function Home() {
   const { user, isLoaded } = useUser();
@@ -71,7 +71,7 @@ export default function Home() {
   const teamMembers = [
     { name: "Md Rahbir Mahdi", role: "CS @ YorkU", img: rahbir, github: "https://github.com/Rahbir1518", linkedin: "https://www.linkedin.com/in/rahbirmahdi/" },
     { name: "Mohammed Faraz Kabbo ", role: "CS @ YorkU", img: faraz, github: "https://github.com/farazkabbo", linkedin: "https://www.linkedin.com/in/mohammed-faraz-kabbo/" },
-    { name: "Reymond Shen", role: "ECE @ UBC", img: reymond, github: "https://github.com/rayleishen", linkedin: "https://www.linkedin.com/in/rayleishen/"},
+    { name: "Raymond Shen", role: "ECE @ UBC", img: raymond, github: "https://github.com/rayleishen", linkedin: "https://www.linkedin.com/in/rayleishen/"},
     { name: "Hamza Panwala", role: "CS @ YorkU", img: hamza, github: "https://github.com/Hamzap01", linkedin: "https://www.linkedin.com/in/hamza-panwala-1bbaba288/" },
   ];
 
