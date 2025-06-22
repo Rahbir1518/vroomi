@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Car, Calendar, Hash, Sparkles, CheckCircle, ArrowRight, User } from "lucide-react";
+import { Car, Calendar, Hash, Leaf, CheckCircle, ArrowRight, User, TreePine } from "lucide-react";
 import { useUser, UserButton } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { createClient } from '@supabase/supabase-js';
+import { Link } from "react-router-dom";
+import logo from "../image/logo1.png"
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
@@ -52,7 +54,7 @@ export default function CarDetail() {
     }
 
     console.log("Insert result:", data);
-    alert("Car details saved successfully!");
+    alert("Car details saved successfully! 🌱");
     setIsSubmitting(false);
     navigate("/driver");
   };
@@ -62,55 +64,72 @@ export default function CarDetail() {
   const progress = Math.round((filledCount / 5) * 100);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
       {/* Animated background omitted for brevity */}
 
-      <header className="w-full bg-white/10 backdrop-blur-md border-b border-white/20 relative z-10">
-        <div className="max-w-4xl mx-auto p-6 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
-              <Car className="w-6 h-6 text-white" />
+      <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-green-200/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4 ">
+            <div className="flex items-center space-x-4">
+            <Link to="/" className="">
+              <img
+                src={logo} alt="Vroomi" 
+                className="w-35 md:w-37 h-15 object-cover"
+                />
+            </Link>
+            <span className="px-2 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
+                Campus
+              </span> 
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Add Your Vehicle
-            </h1>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600 hidden sm:block">
+                {user?.firstName || "User"}
+              </span>
+              <UserButton afterSignOutUrl="/login" />
+            </div>
           </div>
-          <UserButton afterSignOutUrl="/login" appearance={{ elements: { avatarBox: "w-10 h-10" } }} />
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-lg relative z-10 p-6">
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 mt-8 transform hover:scale-[1.02] transition-all duration-300">
+      <div className="flex flex-col items-center px-4 py-8">
+      <main className="w-full max-w-lg">
+        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-green-200/50 p-8 transform hover:scale-[1.01] transition-all duration-300">
           {/* Greeting */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full px-4 py-2 mb-4">
-              <Sparkles className="w-4 h-4 text-purple-300" />
-              <span className="text-white/80 text-sm">Let's get started</span>
+            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full px-4 py-2 mb-4 border border-green-200">
+              <TreePine className="w-4 h-4 text-green-600" />
+              <span className="text-green-600 text-sm font-medium">Sustainable Journey Starts Here</span>
             </div>
-            <p className="text-white/90 text-lg">
-              Hello,&nbsp;
-              <span className="font-semibold text-purple-300">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                Add Your Eco Vehicle
+              </h2>
+            <p className="text-gray-600">
+                Hello,&nbsp;
+                <span className="font-semibold text-green-600">
                 {user?.firstName ?? user?.fullName ?? "Student"}
               </span>
-              ! Tell us about your amazing ride:
+              ! Tell us about your sustainable ride:
             </p>
+            <p className="text-green-600/70 text-sm mt-2">
+                🌱 Every mile counts towards a greener future
+              </p>
           </div>
 
           {/* Form Fields */}
           <div className="space-y-6">
             {/* Make */}
             <div className="group">
-              <label className="flex items-center space-x-2 mb-3">
-                <Car className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80 font-medium">Make</span>
-              </label>
+                <label className="flex items-center space-x-2 mb-3">
+                  <Car className="w-4 h-4 text-green-600" />
+                  <span className="text-gray-700 font-medium">Make</span>
+                </label>
               <div className="relative">
                 <input
                   value={make}
                   onChange={e => setMake(e.target.value)}
                   placeholder="e.g. Tesla, BMW, Toyota"
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 backdrop-blur-sm hover:bg-white/15"
-                />
+                  className="w-full bg-white/80 border border-green-200 rounded-2xl px-4 py-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-300 backdrop-blur-sm hover:bg-white/90"
+                  />
                 {make && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400 animate-scale-in" />}
               </div>
             </div>
@@ -118,25 +137,25 @@ export default function CarDetail() {
             {/* Model */}
             <div className="group">
               <label className="flex items-center space-x-2 mb-3">
-                <Sparkles className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80 font-medium">Model</span>
+                <Leaf className="w-4 h-4 text-green-600" />
+                <span className="text-gray-700 font-medium">Model</span>
               </label>
               <div className="relative">
                 <input
                   value={model}
                   onChange={e => setModel(e.target.value)}
                   placeholder="e.g. Model S, X5, Corolla"
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 backdrop-blur-sm hover:bg-white/15"
-                />
-                {model && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400 animate-scale-in" />}
+                  className="w-full bg-white/80 border border-green-200 rounded-2xl px-4 py-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-300 backdrop-blur-sm hover:bg-white/90"
+                  />
+                  {model && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 animate-scale-in" />}
+                </div>
               </div>
-            </div>
 
             {/* Year */}
             <div className="group">
               <label className="flex items-center space-x-2 mb-3">
-                <Calendar className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80 font-medium">Year</span>
+                <Calendar className="w-4 h-4 text-green-600" />
+                <span className="text-gray-700 font-medium">Year</span>
               </label>
               <div className="relative">
                 <input
@@ -144,34 +163,34 @@ export default function CarDetail() {
                   onChange={e => setYear(e.target.value)}
                   type="number" min="1900" max={new Date().getFullYear()}
                   placeholder="e.g. 2023"
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 backdrop-blur-sm hover:bg-white/15"
-                />
-                {year && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400 animate-scale-in" />}
+                  className="w-full bg-white/80 border border-green-200 rounded-2xl px-4 py-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-300 backdrop-blur-sm hover:bg-white/90"
+                  />
+                  {year && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 animate-scale-in" />}
+                </div>
               </div>
-            </div>
 
             {/* License */}
             <div className="group">
               <label className="flex items-center space-x-2 mb-3">
-                <Hash className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80 font-medium">License Plate</span>
+                <Hash className="w-4 h-4 text-green-600" />
+                <span className="text-gray-700 font-medium">License Plate</span>
               </label>
               <div className="relative">
                 <input
                   value={license}
                   onChange={e => setLicense(e.target.value)}
-                  placeholder="e.g. ABC-1234"
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 backdrop-blur-sm hover:bg-white/15"
-                />
-                {license && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400 animate-scale-in" />}
+                  placeholder="e.g. ECO-2025"
+                  className="w-full bg-white/80 border border-green-200 rounded-2xl px-4 py-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-300 backdrop-blur-sm hover:bg-white/90"
+                  />
+                  {license && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 animate-scale-in" />}
+                </div>
               </div>
-            </div>
 
             {/* Seats */}
             <div className="group">
               <label className="flex items-center space-x-2 mb-3">
-                <User className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80 font-medium">Seats</span>
+                <User className="w-4 h-4 text-green-600" />
+                <span className="text-gray-700 font-medium">Seats</span>
               </label>
               <div className="relative">
                 <input
@@ -179,12 +198,12 @@ export default function CarDetail() {
                   onChange={e => setSeats(e.target.value.replace(/\D/, ""))}
                   type="text"
                   placeholder="e.g. 4"
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 backdrop-blur-sm hover:bg-white/15"
-                />
-                {seats && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400 animate-scale-in" />}
+                  className="w-full bg-white/80 border border-green-200 rounded-2xl px-4 py-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-300 backdrop-blur-sm hover:bg-white/90"
+                  />
+                  {seats && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 animate-scale-in" />}
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Submit Button */}
           <button
@@ -192,8 +211,8 @@ export default function CarDetail() {
             disabled={!isFormValid || isSubmitting}
             className={`w-full mt-8 py-4 rounded-2xl font-semibold text-white transition-all duration-300 transform ${
               isFormValid && !isSubmitting
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:scale-105 shadow-lg"
-                : "bg-gray-600 cursor-not-allowed opacity-50"
+                ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:scale-105 shadow-lg hover:shadow-green-500/25"
+                : "bg-gray-400 cursor-not-allowed opacity-50"
             } flex items-center justify-center space-x-2`}
           >
             {isSubmitting ? (
@@ -211,17 +230,37 @@ export default function CarDetail() {
 
           {/* Progress Bar */}
           <div className="mt-6">
-            <div className="flex justify-between text-xs text-white/60 mb-2">
-              <span>Progress</span>
-              <span>{progress}%</span>
+            <div className="flex justify-between text-xs text-gray-600 mb-2">
+              <span>Eco Progress</span>
+              <span>{progress}% Complete</span>
             </div>
-            <div className="w-full bg-white/10 rounded-full h-2">
+            <div className="w-full bg-green-100 rounded-full h-3 border border-green-200">
               <div
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-out"
+                className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-500 ease-out shadow-sm"
                 style={{ width: `${progress}%` }}
               />
             </div>
+            <div className="text-center mt-3">
+                <span className="text-xs text-green-600/80">
+                  🌱 Building a sustainable future, one ride at a time
+                </span>
+              </div>
           </div>
+           {/* Eco Stats */}
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              <div className="text-center p-3 bg-green-50 rounded-xl border border-green-200">
+                <div className="text-green-600 text-lg">🌍</div>
+                <div className="text-green-700 text-xs mt-1 font-medium">Planet</div>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-xl border border-green-200">
+                <div className="text-green-600 text-lg">♻️</div>
+                <div className="text-green-700 text-xs mt-1 font-medium">Recycle</div>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-xl border border-green-200">
+                <div className="text-green-600 text-lg">🚗</div>
+                <div className="text-green-700 text-xs mt-1 font-medium">Clean</div>
+              </div>
+            </div>
         </div>
       </main>
 
@@ -232,6 +271,7 @@ export default function CarDetail() {
         }
         .animate-scale-in { animation: scale-in 0.3s ease-out; }
       `}</style>
+    </div>
     </div>
   );
 }

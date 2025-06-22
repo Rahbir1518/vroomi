@@ -3,7 +3,8 @@ import { useUser } from "@clerk/clerk-react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import { Car, MapPin, Clock, DollarSign, Users, Search, CheckCircle, AlertCircle, Route, User } from "lucide-react";
 import L from "leaflet";
-
+import { Link } from "react-router-dom";
+import logo from "../image/logo1.png"
 // Fix Leaflet default markers - Modern approach
 const DefaultIcon = L.icon({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
@@ -262,10 +263,17 @@ export default function Rider() {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8 transform transition-all duration-700 ease-out">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 transform hover:scale-110 transition-transform duration-300">
+            <Link to="/" className="mb-2 flex items-center justify-center">
+              <img
+                src={logo} alt="Vroomi" 
+                className="w-35 md:w-37 h-15 object-cover"
+                />
+            </Link>
+
+            {/* <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 transform hover:scale-110 transition-transform duration-300">
               <Car className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Vroomi</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">Vroomi</h1> */}
             <p className="text-gray-600">Smart 4-student carpooling with optimized routes</p>
           </div>
 
